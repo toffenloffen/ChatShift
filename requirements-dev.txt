@@ -1,0 +1,2 @@
+# Only needed to capture the app's own preview window.
+Pillow==12.3.0
