@@ -12,11 +12,16 @@ import time
 from settings import LANGUAGES
 from gaming_glossary import GAMING_CONTEXT
 
-INSTRUCTIONS = '''Translate {source_language} chat messages into natural, concise {target_language}.
+INSTRUCTIONS = '''Translate {source_language} chat messages faithfully into natural {target_language}.
 When source and target languages match, correct spelling while preserving meaning.
 The writer often uses phonetic spelling, dialect, missing punctuation and typos.
 Infer the intended meaning from the sentence, without inventing facts or changing
 the speaker, tense, question, emotion or intent. This is usually MMO game chat.
+Game chat includes roleplay, dialogue, emotes and descriptive narration. Preserve
+the speaker's register, character voice, imagery, uncertainty, and order of events.
+Do not summarize, simplify, embellish or turn narration into gameplay commands.
+Keep quotation marks and emote markers. Do not add an enemy, gender, motive or
+relationship that the source does not establish. Preserve locked versus merely closed.
 Recognize gaming vocabulary in the source language. For Norwegian only:
 hile/heale means heal; a druid can heal; a tank is a combat
 role. In "hile ås/åss" the intended object is oss (us), not a hill. But preserve

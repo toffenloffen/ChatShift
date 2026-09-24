@@ -2,7 +2,7 @@
 
 **Your words. More worlds.**
 
-Write or speak in your own language, right where you already chat. ChatShift puts
+Built for gaming chat, including roleplay. Write or speak in your own language, right where you already chat. ChatShift puts
 the translation into your game or app's chat field. Review it before sending, or
 enable automatic sending. No separate translation window during normal use.
 
@@ -27,6 +27,10 @@ not the separately developed SteamOS application.
 Designed for people who find writing in another language difficult. ChatShift uses
 context to interpret spelling mistakes, dialect and gaming terms, but translations
 can still be wrong. Start with automatic sending off and check your first messages.
+
+Roleplay dialogue, emotes and descriptive messages are welcome: the translator is
+instructed to preserve character voice and detail, not summarize them. The current
+limit is 1,000 characters per message; this is a game-chat tool, not a long-document editor.
 
 ## What is new
 
@@ -167,6 +171,12 @@ some cached. This is **not** a hard token-budget or spending-cap system. Usage c
 Codex allowance; API prices should not be treated as subscription charges.
 
 See [REVIEW.md](REVIEW.md) for measured usage, tests and remaining limitations.
+
+## Language checks
+
+See the [260-case text evaluation and roleplay follow-ups](LANGUAGE_EVALUATION.md)
+for actual outputs, targeted improvements and remaining issues. These are synthetic
+text checks, not a guarantee for every language pair, speaker or game.
 
 ## Development
 
