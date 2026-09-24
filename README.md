@@ -44,6 +44,7 @@ illustrates the intended behavior; individual model responses can vary.
 
 - Translate your outgoing draft in place, without switching to a separate translation window.
 - Choose both source and target from 26 languages. Matching languages request spelling correction.
+- Context-aware [gaming vocabulary](GAMING_TERMS.md), including heal, DPS, aggro, CC and OOM.
 - Record your own keyboard shortcut, with separate support for left and right modifier keys.
 - Send automatically after translation, or review the translated draft before sending.
 - Save your language, shortcut and sending preferences between sessions.
