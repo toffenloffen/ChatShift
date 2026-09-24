@@ -10,8 +10,8 @@ Review before sending is the default.
 Focus changes, other input, pause or closing cancel pending delivery. The recorder has a 30-second limit.
 Automatic sending requires a verified readback and never sends on a failed verification.
 
-The Voice tab also offers **Microphone test → Open test**. Install `requirements-voice.txt`
-first. It downloads the multilingual Whisper small model on first use and runs
+The Voice tab also offers **Microphone test → Open test**. Run **Install ChatShift.cmd** first. Setup installs dependencies and downloads
+the multilingual Whisper small model; it loads on first use and runs
 on the CPU with four threads; no NVIDIA GPU or speech API key is required.
 Recordings begin only after clicking Start recording, stop after at most 30 seconds,
 and remain in memory on the PC. The test displays recognized text and, when the
@@ -19,7 +19,7 @@ chosen languages differ, sends that text to the existing Luna translator. It nev
 types or sends anything into another application. Norwegian dialect was manually tested,
 with useful results and some mistakes; other speakers and dialects still need testing.
 Microphone selection is available; close the test to cancel and release the device.
-Dependencies and model loading are optional so text-only users do not need them.
+Standard setup includes voice dependencies and the model. Recording remains off until enabled.
 Windows is the current test platform; SteamOS microphone and game integration are untested.
 
 ## Intended user experience

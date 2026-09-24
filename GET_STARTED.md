@@ -2,38 +2,27 @@
 
 **Write or speak. Press your shortcut. Chat in another language.**
 
-This is an early Windows release for testing and feedback. It is not a standalone
-installer, and support for every game or PC is not guaranteed.
+This is an early Windows release. Setup includes both text and local voice support.
 
 ## 1. Install
 
-1. Install [Python for Windows](https://www.python.org/downloads/windows/).
-   Python 3.13 is the version tested here. Include Tcl/Tk and the Python launcher.
-2. Install [Codex](https://learn.chatgpt.com/docs/windows/windows-app).
-   Open it, choose ChatGPT sign-in and follow the login steps using your own account.
-   You do not need to write a prompt. Your account needs access to GPT-5.6 Luna in Codex.
-3. On the ChatShift GitHub page, choose **Code → Download ZIP**, then extract the ZIP.
-4. Open PowerShell in the extracted folder and run:
+1. Download the GitHub ZIP and choose **Extract all**. Keep the extracted folder in a permanent location.
+2. Double-click **Install ChatShift.cmd**. Follow any installer prompts.
+   It installs Python 3.13 if needed through Windows Package Manager, installs voice
+   dependencies, downloads and checks Whisper small, and creates a desktop shortcut.
+   Internet is required. The model is several hundred MB; setup may take several minutes.
+   Wait for **Setup complete**. No microphone recording is made during setup.
+3. Install [Codex](https://learn.chatgpt.com/docs/windows/windows-app), open it,
+   and sign in with your ChatGPT account. No prompt or API key is needed.
+   Your account must have access to the model ChatShift uses; usage limits apply.
+4. Open **ChatShift** from the desktop. Enable voice in the app if you want to use it.
 
-   ```powershell
-   ./setup.ps1
-   ```
+If setup fails, the window stays open with the error. Fix it and run the same file again.
+If Windows Package Manager is unavailable, install Python 3.13 from python.org with
+Tcl/Tk and the Python launcher, then rerun setup. Follow your organization's security policy.
 
-5. If you want voice input, run this in the same folder:
-
-   ```powershell
-   ./.venv/Scripts/python.exe -m pip install -r requirements-voice.txt
-   ```
-
-6. Open the `norsk engelsk` folder and double-click **Start ChatShift.vbs**.
-   Keep the extracted folder; the launcher needs it.
-
-Internet and your own eligible Codex account are required for translation. No API key
-is needed. Translation uses your account's Codex allowance. Voice recognition runs
-locally and downloads its model on first use; this first startup can take longer.
-
-If PowerShell blocks setup, follow your PC's script policy or report the error for
-help. Do not change organization-managed security settings.
+This is a guided setup, not a standalone EXE. Codex sign-in is still your own step.
+Keep the extracted folder: the desktop shortcut needs it.
 
 ## 2. Choose your languages and buttons
 
@@ -87,7 +76,7 @@ Record a short sentence. The test shows the result without writing into your gam
 |---|---|
 | Not READY | Check internet, open Codex and sign in, then restart ChatShift. |
 | Shortcut does nothing | Enable the mode, unpause, check its highlighted shortcut and open the chat field. |
-| Voice does not start | Install the voice dependencies, enable voice, choose its shortcut and wait for Voice ready. |
+| Voice does not start | Rerun setup if it failed, enable voice, choose its shortcut and wait for Voice ready. |
 | Wrong words | Check From and To. Turn off automatic sending and correct the draft. |
 | Wrong microphone | Select your microphone in Voice and try Open test. |
 | Works in one game only | Games handle input differently. Include the game and what happened in a bug report. |

@@ -42,7 +42,7 @@ illustrates the intended behavior; individual model responses can vary.
 - Disable text translation independently when you do not need it.
 - Reuse recent identical translations to avoid unnecessary model requests.
 
-**Experimental local voice:** install `requirements-voice.txt` with pip and enable **Voice input**.
+**Experimental local voice:** included by **Install ChatShift.cmd**. Enable **Voice input**.
 In the Voice tab, click the pictured keys or mouse buttons to choose a voice shortcut.
 Choose **Hold to talk** or **Press to start · press again to stop**. Wait for voice to load,
 open your game's chat field, and speak using the shortcut. The language choices at the top
@@ -51,7 +51,7 @@ enables automatic sending after readback verification. Choosing a shortcut alrea
 by the other mode moves it to the mode you are editing.
 Keep the same chat field active until insertion finishes.
 
-The first run downloads Whisper small; recognition runs locally on the CPU without a speech API key.
+Setup downloads and checks Whisper small; recognition runs locally on the CPU without a speech API key.
 Audio stays on your PC; recognized text goes to Luna when languages differ.
 **Microphone test → Open test** opens a separate quality test that never sends anything into your game.
 Game integration and other hardware still need manual testing. See [voice status](VOICE.md).
@@ -97,14 +97,18 @@ combination replaces both default shortcuts. Removing the last button disables t
 
 ## Install
 
-Requirements: Windows, Python 3.11+ with Tcl/Tk, and Codex installed and signed in with ChatGPT.
-The account must have access to GPT-5.6 Luna in Codex. Internet access is required.
-Tested locally with Windows and Python 3.13. Other Windows configurations are not yet verified.
+1. Download the repository ZIP and extract it to a permanent folder.
+2. Double-click **Install ChatShift.cmd**. It installs Python 3.13 if needed,
+   installs voice dependencies, downloads and checks Whisper small, and creates
+   a desktop shortcut. Follow any prompts and wait for **Setup complete**.
+3. Install Codex and sign in with your ChatGPT account, then open ChatShift from the desktop.
 
-1. Download or clone this repository.
-2. Run `./setup.ps1` in PowerShell from the project directory.
-3. For voice, run `./.venv/Scripts/python.exe -m pip install -r requirements-voice.txt`.
-4. Open `norsk engelsk/Start ChatShift.vbs`.
+Internet is required. Windows Package Manager installs Python if missing; if unavailable,
+install Python 3.13 from python.org with Tcl/Tk and the launcher, then rerun setup.
+The model download is several hundred MB. Setup errors stay visible and setup can be rerun.
+The original `setup.ps1` entry point now runs the same full setup.
+This is not a standalone EXE. Keep the extracted folder. Account/model access and
+usage limits apply. Other Windows configurations still need testing.
 
 For experimental Among Us support, also run `./setup_ocr.ps1` and restart ChatShift.
 Windows OCR support for Norwegian and English (United Kingdom) must be installed.
