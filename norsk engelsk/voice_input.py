@@ -69,7 +69,7 @@ class VoiceInput:
         self.devices = {'System default microphone': None}
 
     def build(self, parent):
-        ttk.Label(parent, textvariable=self.label, font=('Segoe UI', 13, 'bold')).pack(anchor='w')
+        ttk.Label(parent, textvariable=self.label, font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=(10, 6))
         ttk.Radiobutton(parent, text='Hold to talk', variable=self.mode, value='hold', command=self.changed).pack(anchor='w')
         ttk.Radiobutton(parent, text='Press to start · press again to stop', variable=self.mode, value='toggle', command=self.changed).pack(anchor='w')
         ttk.Checkbutton(parent, text='Send voice messages automatically', variable=self.auto_send,
@@ -82,6 +82,7 @@ class VoiceInput:
         self.keyboard.pack(side='left', fill='x', expand=True)
         ttk.Label(parent, text='Click to select. Click again to remove.\nFor a combo: hold right mouse, click each button with left mouse, then release right mouse.',
                   wraplength=600).pack(anchor='w')
+        ttk.Label(parent, text='Microphone', font=('Segoe UI', 10, 'bold')).pack(anchor='w', pady=(12, 0))
         self.device_picker = ttk.Combobox(parent, textvariable=self.device, values=list(self.devices), state='readonly')
         self.device_picker.pack(fill='x', pady=8)
         self.device_picker.bind('<<ComboboxSelected>>', lambda event: self.abort('Microphone changed.'))

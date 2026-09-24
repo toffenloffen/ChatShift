@@ -108,6 +108,8 @@ class App:
         root.option_add('*TCombobox*Listbox.foreground', TEXT)
         root.option_add('*TCombobox*Listbox.selectBackground', '#304c64')
         root.option_add('*TCombobox*Listbox.font', ('Segoe UI', 11))
+        dock = tk.Frame(root, bg=CARD, padx=24, pady=12)
+        dock.pack(side='bottom', fill='x')
         viewport = tk.Canvas(root, bg=BG, highlightthickness=0)
         scrollbar = ttk.Scrollbar(root, orient='vertical', command=viewport.yview)
         scrollbar.pack(side='right', fill='y')
@@ -144,26 +146,6 @@ class App:
                    command=lambda: show_help(self.root)).pack(side='right', padx=12)
         body = tk.Frame(shell, bg=BG)
         body.pack(fill='both', expand=True)
-        guide = tk.Frame(body, bg=BG, width=235)
-        guide.pack(side='left', fill='y', padx=(0, 26))
-        guide.pack_propagate(False)
-        tk.Label(guide, text='Stay in the\nconversation.', bg=BG, fg=TEXT,
-                 font=('Segoe UI', 23, 'bold'), justify='left').pack(anchor='w', pady=(13, 18))
-        tk.Label(guide, text='Write where you play.\nChatShift handles the language.', bg=BG,
-                 fg=MUTED, font=('Segoe UI', 11), justify='left').pack(anchor='w', pady=(0, 30))
-        for number, title, detail in (
-            ('01', 'Choose your languages', 'Set the language you write in\nand the language you need.'),
-            ('02', 'Write in your chat', 'Open the chat field in your\ngame or another app.'),
-            ('03', 'Press your shortcut once', 'Release the keys and wait.\nKeep the same field active.')):
-            tk.Label(guide, text=number, bg=BG, fg=ACCENT,
-                     font=('Segoe UI', 10, 'bold')).pack(anchor='w')
-            tk.Label(guide, text=title, bg=BG, fg=TEXT,
-                     font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(3, 5))
-            tk.Label(guide, text=detail, bg=BG, fg=MUTED, justify='left',
-                     font=('Segoe UI', 10)).pack(anchor='w', pady=(0, 23))
-        tk.Label(guide, text='One shortcut.\nA little less language barrier.', bg=BG,
-                 fg=MUTED, font=('Segoe UI', 10), justify='left').pack(side='bottom', anchor='w', pady=15)
-        guide.pack_forget()
         outer = tk.Frame(body, bg=BG)
         outer.pack(side='left', fill='both', expand=True)
 
@@ -181,7 +163,8 @@ class App:
                      anchor='w', justify='left').pack(anchor='w')
 
         language_card = card()
-        label(language_card, 'Translation languages · From → To')
+        label(language_card, '1. Choose your languages')
+        label(language_card, 'From: your language     →     To: the language you want · Applies to text and voice.', small=True)
         language_row = tk.Frame(language_card, bg=CARD)
         language_row.pack(fill='x', pady=(13, 4))
         self.source_picker = ttk.Combobox(language_row, textvariable=self.source_language,
@@ -195,17 +178,13 @@ class App:
         self.language_picker.pack(side='left', fill='x', expand=True)
         self.language_picker.bind('<<ComboboxSelected>>', self.preferences_changed)
 
-        modes_card = card()
-        label(modes_card, 'Choose how you chat')
-        ttk.Checkbutton(modes_card, text='Text translation', variable=self.text_enabled,
-                        command=self.text_mode_changed).pack(anchor='w', pady=(8, 3))
         self.voice_enabled = self.voice.enabled
-        ttk.Checkbutton(modes_card, text='Voice input · local AI', variable=self.voice_enabled,
-                        command=self.voice.changed).pack(anchor='w')
 
         shortcut_container = card()
+        label(shortcut_container, '2. Choose how you chat')
+        label(shortcut_container, 'Settings save automatically. Text and voice can both stay on.', small=True)
         self.shortcut_tabs = ttk.Notebook(shortcut_container, style='ChatShift.TNotebook')
-        self.shortcut_tabs.pack(fill='x')
+        self.shortcut_tabs.pack(fill='x', pady=(12, 0))
         shortcut_card = tk.Frame(self.shortcut_tabs, bg=CARD, padx=10, pady=12)
         voice_shortcut_card = tk.Frame(self.shortcut_tabs, bg=CARD, padx=10, pady=12)
         self.shortcut_tabs.add(shortcut_card, text='Text')
@@ -213,7 +192,9 @@ class App:
         controller_card = tk.Frame(self.shortcut_tabs, bg=CARD, padx=10, pady=12)
         self.shortcut_tabs.add(controller_card, text='Controller')
         self.controller.build(controller_card)
-        label(voice_shortcut_card, 'Voice shortcut')
+        ttk.Checkbutton(voice_shortcut_card, text='Enable voice input', variable=self.voice_enabled,
+                        command=self.voice.changed).pack(anchor='w', pady=(0, 6))
+        label(voice_shortcut_card, 'Open your chat, then use your voice shortcut.', small=True)
         self.voice.build(voice_shortcut_card)
         ttk.Separator(voice_shortcut_card, orient='horizontal').pack(fill='x', pady=(18, 12))
         test_area = tk.Frame(voice_shortcut_card, bg=CARD)
@@ -227,6 +208,11 @@ class App:
         ttk.Button(test_area, text='Open test', style='Small.TButton',
                    command=self.open_voice_trial).pack(side='right', padx=(12, 0))
         shortcut_header = tk.Frame(shortcut_card, bg=CARD)
+        ttk.Checkbutton(shortcut_card, text='Enable text translation', variable=self.text_enabled,
+                        command=self.text_mode_changed).pack(anchor='w', pady=(0, 6))
+        label(shortcut_card, 'Write in your chat. Press your shortcut once and wait for the translation.', small=True)
+        ttk.Checkbutton(shortcut_card, text='Send automatically after translating',
+                        variable=self.auto, command=self.preferences_changed).pack(anchor='w', pady=(8, 12))
         shortcut_header.pack(fill='x')
         tk.Label(shortcut_header, text='Text shortcut', bg=CARD, fg=TEXT,
                  font=('Segoe UI', 12, 'bold')).pack(side='left')
@@ -251,11 +237,8 @@ class App:
             on_pick=self.pick_shortcut_key, on_finish=self.save_shortcut_draft)
         self.keyboard_preview.pack(side='left', fill='x', expand=True)
         tk.Label(shortcut_card,
-            text='Left-click a button in the picture to select it. Click again to remove.\n'
-                 'For a combination:\n'
-                 '1. Keep the right mouse button held down.\n'
-                 '2. Click up to 3 buttons in the picture with the left mouse button, one at a time.\n'
-                 '3. Release the right mouse button to save.',
+            text='Click a key or mouse button to select it. Click again to remove.\n'
+                 'For a combination: hold right mouse, left-click up to 3 buttons, then release.',
             bg=CARD, fg=MUTED, font=('Segoe UI', 10), wraplength=800,
             justify='left').pack(anchor='w', pady=(3, 5))
         self.draft_hint = tk.StringVar(value='')
@@ -269,21 +252,26 @@ class App:
             command=self.cancel_shortcut_draft).pack(side='left', padx=8)
         self.key_instructions = tk.StringVar(value=self.shortcut_instructions())
 
-        send_card = card()
-        ttk.Checkbutton(send_card, text='Send automatically after translating',
-                        variable=self.auto, command=self.preferences_changed).pack(anchor='w')
-
-        status_card = card()
+        def fit_tab(event=None):
+            selected = self.shortcut_tabs.select()
+            if selected:
+                page = self.shortcut_tabs.nametowidget(selected)
+                self.shortcut_tabs.configure(height=page.winfo_reqheight())
+        self.shortcut_tabs.bind('<<NotebookTabChanged>>', fit_tab)
+        for page in (shortcut_card, voice_shortcut_card, controller_card):
+            page.bind('<Configure>', fit_tab)
+        status_card = tk.Frame(dock, bg=CARD)
+        status_card.pack(side='left', fill='x', expand=True)
         self.status_indicator = tk.Label(status_card, textvariable=self.badge, bg=CARD, fg=MUTED,
                  font=('Segoe UI', 9, 'bold'))
         self.status_indicator.pack(anchor='w')
         self.badge.trace_add('write', self.update_ready_color)
         self.update_ready_color()
         tk.Label(status_card, textvariable=self.status, bg=CARD, fg=TEXT,
-                 font=('Segoe UI', 11), wraplength=535, justify='left', anchor='w').pack(
+                 font=('Segoe UI', 10), wraplength=490, justify='left', anchor='w').pack(
                      anchor='w', fill='x', pady=(7, 0))
-        footer = tk.Frame(outer, bg=BG)
-        footer.pack(fill='x', pady=(2, 10))
+        footer = tk.Frame(dock, bg=CARD)
+        footer.pack(side='right', padx=(14, 0))
         self.start_button = ttk.Button(footer, text='Run in background', style='Accent.TButton',
                                       command=self.start, state='disabled')
         self.start_button.pack(side='left')
