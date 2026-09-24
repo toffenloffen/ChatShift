@@ -6,8 +6,9 @@ physical controller and in-game behavior still need testing.
 1. Connect an Xbox-compatible controller by USB or Bluetooth.
 2. Open **Controller**, enable controller shortcuts, and choose its slot (1–4).
    The status shows whether that slot is connected and which buttons are pressed.
-3. Select **Text** or **Voice**, check up to three buttons, and click **Save controller shortcut**.
-   Uncheck every button and save to remove it. An overlapping shortcut moves from the other mode.
+3. Select **Text** or **Voice** and click up to three buttons on the controller picture.
+   Choices save automatically. Click a selected button again to remove it, or use **Clear**.
+   An overlapping shortcut moves from the other mode. Green buttons show your saved choice.
 4. Enable text translation or voice input as usual. Wait for the translator and, for voice,
    the local speech model to be ready. Open the game chat before using the shortcut.
 5. Text activates on release. Voice follows the hold/toggle setting in the Voice tab.
@@ -24,6 +25,9 @@ is not a shortcut. Controller button names follow Xbox labels.
 **Rear paddles and Steam Deck back buttons:** Windows XInput does not expose them as
 separate buttons here. Use supported controller software or Steam Input to map them to
 a keyboard shortcut, then select that shortcut in ChatShift's Text or Voice tab.
+The **Rear paddles** picture shows four illustrative positions. Clicking one opens
+mapping guidance and your current keyboard shortcut; it does not assign a native paddle
+or configure Steam automatically. **Front + shoulders** returns to direct button selection.
 Do not assume a rear paddle is independent if it duplicates a normal game button.
 
 ## Sharing work with SteamOS
