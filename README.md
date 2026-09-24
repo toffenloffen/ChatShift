@@ -6,6 +6,9 @@ Write or speak in your own language, right where you already chat. ChatShift put
 the translation into your game or app's chat field. Review it before sending, or
 enable automatic sending. No separate translation window during normal use.
 
+**[Watch the ChatShift demo on YouTube](https://www.youtube.com/watch?v=0wfThs66Kjs)**
+— a hands-on demonstration of Norwegian-to-English text and voice translation in Valheim.
+
 **New here? Follow the [Quick start guide](GET_STARTED.md)** for installation,
 text and voice setup, shortcuts and your first message.
 
