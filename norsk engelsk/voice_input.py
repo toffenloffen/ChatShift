@@ -175,7 +175,7 @@ class VoiceInput:
                 model = getattr(self.app, 'speech_model', None) or LocalTranscriber()
                 self.events.put(('ready', (model, devices)))
             except ImportError:
-                self.events.put(('load_error', 'Voice needs the optional requirements-voice.txt dependencies.'))
+                self.events.put(('load_error', 'Voice setup is incomplete. Run Install ChatShift.cmd, then restart ChatShift.'))
             except Exception:
                 self.events.put(('load_error', 'Could not load voice. Check internet access, audio devices and free disk space.'))
         threading.Thread(target=work, daemon=True).start()

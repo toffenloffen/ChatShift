@@ -468,7 +468,7 @@ class App:
             from voice_trial import show_voice_trial
             show_voice_trial(self)
         except ImportError:
-            messagebox.showinfo('Voice setup', 'Install the optional voice dependencies from requirements-voice.txt, then try again.')
+            messagebox.showinfo('Voice setup', 'Run Install ChatShift.cmd from the downloaded folder to finish voice setup, then restart ChatShift.')
 
     def start(self, minimize=True):
         if not self.text_enabled.get() and not self.voice.enabled.get():
