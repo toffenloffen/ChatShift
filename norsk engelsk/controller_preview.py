@@ -69,10 +69,10 @@ class ControllerPreview(tk.Canvas):
             self.create_text(226, 101, text='RIGHT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
             self.create_text(474, 101, text='LEFT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
             self.buttons = {
-                'Rear right upper (right hand)': (186, 118, 267, 157, 'Right upper', False),
-                'Rear right lower (right hand)': (186, 176, 267, 215, 'Right lower', False),
-                'Rear left upper (left hand)': (433, 118, 514, 157, 'Left upper', False),
-                'Rear left lower (left hand)': (433, 176, 514, 215, 'Left lower', False)}
+                'Rear R4 (right hand, upper)': (186, 118, 267, 157, 'R4', False),
+                'Rear R5 (right hand, lower)': (186, 176, 267, 215, 'R5', False),
+                'Rear L4 (left hand, upper)': (433, 118, 514, 157, 'L4', False),
+                'Rear L5 (left hand, lower)': (433, 176, 514, 215, 'L5', False)}
         face_colors = {'A': '#80dc9b', 'B': '#ff969f', 'X': '#8cc9ff', 'Y': '#ffe193'}
         for index, (name, (x1, y1, x2, y2, label, round_button)) in enumerate(self.buttons.items()):
             tag = 'button_' + str(index)
