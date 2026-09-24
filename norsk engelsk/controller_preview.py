@@ -4,7 +4,7 @@ import tkinter as tk
 
 class ControllerPreview(tk.Canvas):
     def __init__(self, parent, on_pick):
-        super().__init__(parent, width=700, height=310, bg='#121625', highlightthickness=0)
+        super().__init__(parent, width=700, height=310, bg='#0d1421', highlightthickness=0)
         self.on_pick = on_pick
         self.selection = set()
         self.view = 'front'
@@ -18,6 +18,12 @@ class ControllerPreview(tk.Canvas):
         self.bind('<Return>', lambda e: self.pick(list(self.buttons)[self.focus_index]))
         self.bind('<FocusIn>', lambda e: self.draw())
         self.bind('<FocusOut>', lambda e: self.draw())
+        self.bind('<Button-1>', self.click_picture)
+
+    def click_picture(self, event):
+        for name, (x1, y1, x2, y2, _, _) in self.buttons.items():
+            if x1-3 <= event.x <= x2+3 and y1-3 <= event.y <= y2+3:
+                return self.pick(name)
 
     def move_focus(self, step):
         self.focus_index = (self.focus_index + step) % len(self.buttons)
@@ -39,14 +45,43 @@ class ControllerPreview(tk.Canvas):
         self.focus_index = 0
         self.draw()
 
+    def rounded(self, x1, y1, x2, y2, **options):
+        radius = min(12, (y2-y1)/2, (x2-x1)/2)
+        return self.create_polygon(x1+radius, y1, x2-radius, y1, x2, y1,
+            x2, y1+radius, x2, y2-radius, x2, y2, x2-radius, y2,
+            x1+radius, y2, x1, y2, x1, y2-radius, x1, y1+radius, x1, y1,
+            smooth=True, splinesteps=24, **options)
+
     def draw(self):
         self.delete('all')
-        self.create_polygon(175, 68, 240, 58, 460, 58, 525, 68, 566, 121,
-            595, 248, 566, 286, 530, 278, 473, 219, 227, 219, 170, 278,
-            134, 286, 105, 248, 134, 121, smooth=True,
-            fill='#242a40', outline='#526084', width=2)
-        self.create_line(235, 81, 465, 81, fill='#51416e', width=3)
-        self.create_text(350, 101, text='CHATSHIFT', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
+        shell = (164, 77, 201, 64, 276, 66, 309, 77, 391, 77, 424, 66,
+                 499, 64, 536, 77, 560, 112, 579, 172, 590, 235,
+                 581, 267, 559, 277, 540, 267, 492, 218, 454, 209,
+                 413, 219, 287, 219, 246, 209, 208, 218, 160, 267,
+                 141, 277, 119, 267, 110, 235, 121, 172, 140, 112)
+        shadow = tuple(v + (7 if i % 2 else 0) for i, v in enumerate(shell))
+        self.create_polygon(*shadow, smooth=True, splinesteps=32, fill='#090d17', outline='', width=0)
+        self.create_polygon(*shell, smooth=True, splinesteps=32,
+                            fill='#292e43', outline='#667191', width=2)
+        # Sculpted grip panels and restrained accent lighting.
+        for flip in (False, True):
+            points = [(147, 169), (170, 184), (191, 210), (151, 257),
+                      (137, 260), (124, 244), (130, 202)]
+            coords = [v for x, y in points for v in ((700-x if flip else x), y)]
+            self.create_polygon(*coords, smooth=True, fill='#1b2031', outline='#343d56')
+            for offset in range(5):
+                x = 139 + offset*4
+                self.create_line(700-x if flip else x, 211,
+                                 700-(x-5) if flip else x-5, 241,
+                                 fill='#30384e', width=1)
+        self.create_line(172, 81, 215, 75, 277, 77, smooth=True, fill='#77639f', width=2)
+        self.create_line(423, 77, 485, 75, 528, 81, smooth=True, fill='#568b94', width=2)
+        self.rounded(325, 86, 375, 112, fill='#171c2b', outline='#64758c')
+        self.create_text(350, 99, text='CS', fill='#9feadd', font=('Segoe UI', 10, 'bold'))
+        if self.view == 'front':
+            self.create_oval(214, 146, 340, 259, fill='#202538', outline='#39435d')
+            self.create_oval(165, 91, 249, 175, fill='#151a29', outline='#586482', width=2)
+            self.create_oval(365, 166, 449, 250, fill='#151a29', outline='#586482', width=2)
         self.buttons = {
             'LT': (185, 20, 275, 46, 'LT', False), 'RT': (425, 20, 515, 46, 'RT', False),
             'LB': (175, 51, 280, 78, 'LB', False), 'RB': (420, 51, 525, 78, 'RB', False),
@@ -63,7 +98,7 @@ class ControllerPreview(tk.Canvas):
             'B': (533, 128, 569, 164, 'B', True),
             'A': (494, 167, 530, 203, 'A', True)}
         if self.view == 'back':
-            self.create_rectangle(285, 113, 415, 215, fill='#1b2032', outline='#46516e', width=2)
+            self.rounded(285, 122, 415, 207, fill='#222739', outline='#46516e', width=1)
             self.create_text(350, 157, text='REAR VIEW', fill='#a6acc6', font=('Segoe UI', 10, 'bold'))
             self.create_text(350, 180, text='via Steam Input', fill='#b69aff', font=('Segoe UI', 9))
             self.create_text(226, 101, text='RIGHT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
@@ -78,16 +113,21 @@ class ControllerPreview(tk.Canvas):
             tag = 'button_' + str(index)
             selected = name in self.selection
             focused = self.focus_get() == self and index == self.focus_index
-            color = '#78f5b0' if selected else '#46516e'
-            shape = self.create_oval if round_button else self.create_rectangle
-            shape(x1-3, y1-3, x2+3, y2+3, fill='#163d32' if selected else '#1b2032',
+            color = '#c1fff1' if selected else '#40526b'
+            shape = self.create_oval if round_button else self.rounded
+            shape(x1-3, y1-3, x2+3, y2+3, fill='#285851' if selected else '#1b2032',
                   outline='#b69aff' if focused else color, width=2, tags=tag)
-            shape(x1, y1, x2, y2, fill='#245743' if selected else '#161b2c',
+            shape(x1, y1, x2, y2, fill='#77f2db' if selected else '#202c40',
                   outline=color, width=1, tags=tag)
+            if 'stick click' in name:
+                self.create_oval(x1+7, y1+7, x2-7, y2-7, outline='#d6fff5' if selected else '#3a4662', width=2, tags=tag)
             self.create_text((x1+x2)/2, (y1+y2)/2, text=label,
-                             fill='#b8ffce' if selected else face_colors.get(name, '#e2e7fa'),
+                             fill='#10111b' if selected else face_colors.get(name, '#e2e7fa'),
                              font=('Segoe UI', 10, 'bold'), tags=tag)
-            self.tag_bind(tag, '<Button-1>', lambda e, n=name: self.pick(n))
         self.create_text(350, 294, text=('Rear view · Left / right refer to your hands while playing (mirrored here)'
                          if self.view == 'back' else 'LS / RS = press the stick · Click buttons to combine them'),
                          fill='#a6acc6', font=('Segoe UI', 9))
+        from canvas_render import render
+        self.rendered = render(self, 700, 310)
+        if self.rendered is not None:
+            self.create_image(0, 0, image=self.rendered, anchor='nw')
