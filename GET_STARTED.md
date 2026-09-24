@@ -10,7 +10,7 @@ Using a controller? See [controller setup](CONTROLLERS.md).
 
 ## 1. Install
 
-1. Download the GitHub ZIP and choose **Extract all**. Keep the extracted folder in a permanent location.
+1. [Download ChatShift-Windows.zip](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip) and choose **Extract all**. Keep the extracted folder in a permanent location.
 2. Double-click **Install ChatShift.cmd**. Follow any installer prompts.
    It installs Python 3.13 if needed through Windows Package Manager, installs voice
    dependencies, downloads and checks Whisper small, and creates a desktop shortcut.

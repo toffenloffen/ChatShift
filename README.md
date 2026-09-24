@@ -14,6 +14,11 @@ enable automatic sending. No separate translation window during normal use.
 **New here? Follow the [Quick start guide](GET_STARTED.md)** for installation,
 text and voice setup, shortcuts and your first message.
 
+**[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip)**
+
+Extract the ZIP, open **Install ChatShift.cmd**, and wait for setup to finish.
+[Release notes and checksums](https://github.com/toffenloffen/ChatShift/releases/latest).
+
 ## Choose your platform
 
 | Your device | Installation and status |
@@ -48,7 +53,8 @@ limit is 1,000 characters per message; this is a game-chat tool, not a long-docu
 - **Microphone test:** inspect recognized speech and its translation without sending
   a message to a game.
 
-These changes are in the repository source and setup flow, not a new standalone EXE release.
+The Windows download packages this source and guided setup. It is not a standalone EXE;
+voice dependencies and the speech model are downloaded during installation.
 
 ## Features
 
@@ -111,7 +117,7 @@ For rear-button mapping and gamepad limits, see [Controllers](CONTROLLERS.md).
 
 ## Install
 
-1. Download the repository ZIP and extract it to a permanent folder.
+1. [Download ChatShift-Windows.zip](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip) and extract it to a permanent folder.
 2. Double-click **Install ChatShift.cmd**. It installs Python 3.13 if needed,
    installs voice dependencies, downloads and checks Whisper small, and creates
    a desktop shortcut. Follow any prompts and wait for **Setup complete**.
