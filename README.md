@@ -12,10 +12,17 @@ enable automatic sending. No separate translation window during normal use.
 **New here? Follow the [Quick start guide](GET_STARTED.md)** for installation,
 text and voice setup, shortcuts and your first message.
 
-**Work in progress — experimental prototype.** The current implementation runs on
-Windows. SteamOS / Steam Deck support is a planned development direction and is **not
-implemented yet**. Downloading this repository on a Deck gives you the source code,
-not a working SteamOS application. See [SteamOS development notes](STEAMOS.md).
+## Choose your platform
+
+| Your device | Installation and status |
+| --- | --- |
+| **Windows PC** | [Install the Windows version](GET_STARTED.md). Early version with text, voice and experimental Xbox-compatible controller shortcuts. |
+| **Steam Deck / SteamOS (Linux)** | [SteamOS development status](STEAMOS.md). A separate version is being developed; its installer is not published in this repository yet. |
+| **Other Linux PCs** | No tested installer yet. SteamOS work does not automatically establish compatibility with every Linux desktop. |
+
+**Work in progress — experimental prototype.** The Windows installer is for Windows
+only. Downloading this repository on a Deck currently provides the Windows source,
+not the separately developed SteamOS application.
 
 ChatShift is an experimental Windows desktop app that translates the message you are
 writing directly in a supported chat field. You select your source language, press your chosen
@@ -43,6 +50,8 @@ illustrates the intended behavior; individual model responses can vary.
 - See your shortcut highlighted on a keyboard, including left/right modifier keys or F10 alone.
 - Open **Help & setup** for the official Codex setup link, usage instructions and troubleshooting.
 - Disable text translation independently when you do not need it.
+- Experimental **Controller** tab: choose up to three Xbox-compatible buttons for text
+  or voice, with live connection/button status. See [controller setup](CONTROLLERS.md).
 - Reuse recent identical translations to avoid unnecessary model requests.
 
 **Experimental local voice:** included by **Install ChatShift.cmd**. Enable **Voice input**.

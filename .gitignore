@@ -6,4 +6,6 @@ __pycache__/
 .runtime/
 .settings.json
 .settings.tmp
+.controller.json
+.controller.tmp
 *.log

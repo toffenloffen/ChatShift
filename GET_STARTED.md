@@ -3,6 +3,10 @@
 **Write or speak. Press your shortcut. Chat in another language.**
 
 This is an early Windows release. Setup includes both text and local voice support.
+For Steam Deck / SteamOS or other Linux systems, see [platform status](STEAMOS.md);
+do not run the Windows installer there.
+
+Using a controller? See [controller setup](CONTROLLERS.md).
 
 ## 1. Install
 

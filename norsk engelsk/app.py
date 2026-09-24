@@ -17,6 +17,7 @@ from shortcuts import binding_label, validate_binding, MODIFIER_NAMES, NUMPAD_EN
 from keyboard_preview import KeyboardPreview, MousePreview, ShortcutDraft, highlighted_keys
 from help_view import show_help
 from voice_input import VoiceInput
+from controller_ui import ControllerInput
 
 BG = '#0c101c'
 CARD = '#1b1e2e'
@@ -54,6 +55,7 @@ class App:
         self.status = tk.StringVar(value='Connecting and warming up your translator…')
         self.badge = tk.StringVar(value='CONNECTING')
         self.voice = VoiceInput(self, saved)
+        self.controller = ControllerInput(self, persist=prepare)
         root.title('ChatShift · Chat translator')
         assets = Path(__file__).resolve().parent / 'assets'
         self.app_icon = tk.PhotoImage(file=str(assets / 'chatshift.png'))
@@ -208,6 +210,9 @@ class App:
         voice_shortcut_card = tk.Frame(self.shortcut_tabs, bg=CARD, padx=10, pady=12)
         self.shortcut_tabs.add(shortcut_card, text='Text')
         self.shortcut_tabs.add(voice_shortcut_card, text='Voice')
+        controller_card = tk.Frame(self.shortcut_tabs, bg=CARD, padx=10, pady=12)
+        self.shortcut_tabs.add(controller_card, text='Controller')
+        self.controller.build(controller_card)
         label(voice_shortcut_card, 'Voice shortcut')
         self.voice.build(voice_shortcut_card)
         ttk.Separator(voice_shortcut_card, orient='horizontal').pack(fill='x', pady=(18, 12))
@@ -497,6 +502,7 @@ class App:
             self.root.iconify()
 
     def stop(self):
+        self.controller.reset()
         self.voice.abort('Voice cancelled. Shortcuts paused.')
         self.cancel.set()
         if self.registered:
@@ -506,8 +512,8 @@ class App:
         self.badge.set('PAUSED')
         self.status.set('Shortcuts are paused. Your keyboard works normally.')
 
-    def trigger(self, target):
-        if self.binding is not None and self.binding['key'] is None:
+    def trigger(self, target, controller=False):
+        if not controller and self.binding is not None and self.binding['key'] is None:
             return
         if self.busy or not self.text_enabled.get() or not self.registered or not win.external(target[0]) or self.local is None:
             return
@@ -548,6 +554,7 @@ class App:
         threading.Thread(target=work, daemon=True).start()
 
     def poll(self):
+        self.controller.poll()
         while True:
             voice_event = win.poll_voice()
             if voice_event is None:
@@ -616,6 +623,7 @@ class App:
 
     def close(self):
         self.closing = True
+        self.controller.reset()
         voice = getattr(self, 'voice_trial', None)
         if voice is not None and not voice.closed:
             voice.close()
@@ -637,11 +645,14 @@ if __name__ == '__main__':
     instance = win.acquire_instance()
     if instance:
         try:
-            app = App(tk.Tk(), show_settings='--settings' in sys.argv or '--voice-test' in sys.argv)
+            app = App(tk.Tk(), show_settings=any(flag in sys.argv for flag in
+                      ('--settings', '--voice-test', '--controller-setup')))
             if '--voice-test' in sys.argv:
                 app.root.after(500, app.open_voice_trial)
             if '--voice-setup' in sys.argv:
                 app.shortcut_tabs.select(1)
+            if '--controller-setup' in sys.argv:
+                app.shortcut_tabs.select(2)
             app.root.mainloop()
         finally:
             win.kernel32.CloseHandle(instance)

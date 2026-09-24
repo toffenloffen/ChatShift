@@ -1,7 +1,12 @@
 # SteamOS development notes
 
-ChatShift is an unfinished Windows prototype. This repository is being shared so
-development can continue on Steam Deck / SteamOS. No Linux compatibility is claimed.
+The published code in this repository is the Windows prototype. A separate SteamOS
+version is under development on Steam Deck, with controller bindings reported in its UI.
+That code and a tested SteamOS installer have not yet been published here.
+No Linux compatibility is claimed for the Windows installer.
+
+Windows now has experimental controller support; see [controller notes](CONTROLLERS.md)
+for the portable chord logic and the Windows-specific parts to compare with the Deck work.
 
 ## Get the source on Steam Deck
 
