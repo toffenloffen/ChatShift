@@ -43,8 +43,10 @@ def run(target, owner, key, cancel, send=True, translate_fn=translate, progress=
     if capture('Verifying the translated text', collapse=False, preserve_clipboard=True) != translated:
         raise ValueError('Could not verify the pasted text. Enter was not sent; check the field.')
     check()
+    # Verification selects the whole draft. Collapse that selection before Enter:
+    # multiline editors replace selected text with a newline instead of sending.
+    win.emit([(0x27, 0, 0), (0x27, 0, 2)])
+    check()
     if send:
         win.send_enter(target[0], target[1])
-    else:
-        win.emit([(0x27, 0, 0), (0x27, 0, 2)])
     return translated, time.perf_counter() - start

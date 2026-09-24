@@ -227,6 +227,29 @@ class TransactionTests(unittest.TestCase):
         self.run_transaction(send=False)
         self.calls['send_enter'].assert_not_called()
 
+    def test_auto_send_does_not_replace_selected_translation_with_newline(self):
+        # Model a multiline editor: Ctrl+A readback selects all; Enter replaces
+        # the selection unless the caret has first been moved to its end.
+        editor = {'text': 'hei', 'selected': False}
+        def capture(*args, **kwargs):
+            editor['selected'] = not kwargs.get('collapse', True)
+            return editor['text']
+        def paste(target, key):
+            if key == ord('V'):
+                editor['text'] = 'Hello'
+                editor['selected'] = False
+        def keys(events):
+            if events == [(0x27, 0, 0), (0x27, 0, 2)]:
+                editor['selected'] = False
+        def enter(*args):
+            editor['text'] = '\n' if editor['selected'] else editor['text'] + '\n'
+        self.calls['capture'].side_effect = capture
+        self.calls['shortcut'].side_effect = paste
+        self.calls['emit'].side_effect = keys
+        self.calls['send_enter'].side_effect = enter
+        self.run_transaction(send=True)
+        self.assertEqual(editor['text'], 'Hello\n')
+
 
 class AppTests(unittest.TestCase):
     def setUp(self):
