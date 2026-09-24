@@ -1,21 +1,56 @@
-MIT License
+ChatShift Free Use and Attribution License 1.0
+Effective date: 2026-09-24
 
-Copyright (c) 2026 ChatShift contributors
+Copyright (c) 2026 toffenloffen and applicable contributors.
+ChatShift was created by toffenloffen.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Scope and existing rights
+This license applies to original ChatShift material distributed under this
+license, to the extent the copyright holders may license that material.
+It does not replace third-party licenses or revoke rights already granted
+under another license. Earlier MIT-licensed versions remain available under
+their original terms; see LICENSE-MIT-LEGACY.txt. Material already received
+under MIT may continue to be used under MIT, including commercially.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Free use and feedback
+You may use and run the Software free of charge, including at work or while
+streaming. You may download and make copies necessary to install, run and
+back up the Software for your own use. You may inspect the published source
+and submit feedback and bug reports. No permission to modify, redistribute,
+sublicense or publish derivative versions is granted by this license.
+Sharing links to the official project and publishing reviews or demonstrations
+of ordinary use is allowed. All other rights are reserved, subject to section 1
+and rights that cannot be restricted under applicable law. GitHub users retain
+any viewing and forking rights granted under GitHub's Terms of Service.
 
+3. Attribution and accurate authorship
+Keep this license and the copyright and attribution notices with all copies
+or substantial portions of the Software. Public distributions and their
+documentation must visibly credit "ChatShift created by toffenloffen" and
+link to https://github.com/toffenloffen/ChatShift where links are supported.
+Do not claim that you created the original ChatShift software or imply the
+creator's endorsement. This attribution requirement does not grant permission
+to redistribute or modify the Software.
+
+4. No sale or paid redistribution
+Except where an earlier or third-party license independently grants that
+right, you may not sell, sublicense for a fee, rent, or charge for access to
+the Software or modified versions, including as part of a paid bundle or
+hosted service, without separate written permission from toffenloffen.
+Commercial distribution rights for original ChatShift material covered by
+this license are reserved by its rights holder. Ordinary use of the Software
+in a business or monetized stream is allowed under section 2.
+
+5. Third-party components
+Dependencies, downloaded models and other third-party material retain their
+own licenses. This license does not restrict rights granted by those licenses
+or grant ownership of those components. See THIRD_PARTY_NOTICES.md.
+
+6. Disclaimer
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW.

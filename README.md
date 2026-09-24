@@ -2,6 +2,8 @@
 
 **Your words. More worlds.**
 
+Created by **[toffenloffen](https://github.com/toffenloffen)**.
+
 Built for gaming chat, including roleplay. Write or speak in your own language, right where you already chat. ChatShift puts
 the translation into your game or app's chat field. Review it before sending, or
 enable automatic sending. No separate translation window during normal use.
@@ -204,5 +206,15 @@ not used by the app. The optional local model has separate attribution in
 
 ## License
 
-ChatShift source code is provided under the MIT license. Dependencies and downloaded models
-retain their own licenses. See [LICENSE](LICENSE).
+ChatShift is free to use under the [ChatShift Free Use and Attribution License](LICENSE).
+You may install and use it free of charge and send feedback or bug reports.
+Keep the creator credit and do not claim you created ChatShift. This license does
+not permit modification, redistribution, resale or paid access without separate
+written permission from toffenloffen. Sharing the official project link, reviews,
+demonstrations, and using ChatShift at work or in a monetized stream are allowed.
+GitHub's own viewing and forking rights still apply.
+
+This is a **source-available license, not an OSI open-source license**. The change
+does not revoke the MIT permissions on previously published versions or material;
+those permissions still allow commercial reuse. The [previous MIT license](LICENSE-MIT-LEGACY.txt)
+is retained for reference. Dependencies and downloaded models retain their own licenses.

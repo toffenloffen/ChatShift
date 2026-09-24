@@ -5,7 +5,7 @@ not bundled in this repository. OpenAI services require a user's own account and
 
 The optional `setup_local.py` downloads Argos Norwegian–English 1.9, based on OPUS-MT work
 by Jörg Tiedemann and Santhosh Thottingal. The model is CC BY 4.0; its README and attribution
-are retained in the downloaded model directory. It is not part of the MIT-licensed source.
+are retained in the downloaded model directory. It is separate from ChatShift's own license.
 Model source: https://data.argosopentech.com/argospm/v1/translate-nb_en-1_9.argosmodel
 Index: https://github.com/argosopentech/argospm-index
 
