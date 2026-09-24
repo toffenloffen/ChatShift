@@ -17,4 +17,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Could not create the Python environment.' }
 & (Join-Path $environmentFolder 'Scripts/python.exe') -c 'import tkinter; print("ChatShift setup is ready.")'
 if ($LASTEXITCODE -ne 0) { throw 'Python tkinter is missing. Modify your Python installation to include Tcl/Tk.' }
 Write-Host 'Sign in to Codex with ChatGPT, then open: norsk engelsk\Start ChatShift.vbs'
-Write-Host 'The online app needs no pip packages and no API key.'
+Write-Host 'Text translation needs no extra pip packages and no API key.'
+Write-Host 'For voice, run: ./.venv/Scripts/python.exe -m pip install -r requirements-voice.txt'
+Write-Host 'Read GET_STARTED.md for first-time setup and usage.'

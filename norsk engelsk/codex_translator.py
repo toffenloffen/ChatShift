@@ -11,11 +11,13 @@ import threading
 import time
 from settings import LANGUAGES
 
-INSTRUCTIONS = '''Translate Norwegian chat messages into natural, concise {target_language}.
+INSTRUCTIONS = '''Translate {source_language} chat messages into natural, concise {target_language}.
+When source and target languages match, correct spelling while preserving meaning.
 The writer often uses phonetic spelling, dialect, missing punctuation and typos.
 Infer the intended meaning from the sentence, without inventing facts or changing
 the speaker, tense, question, emotion or intent. This is usually MMO game chat.
-Recognize gaming words: hile/heale means heal; a druid can heal; a tank is a combat
+Recognize gaming vocabulary in the source language. For Norwegian only:
+hile/heale means heal; a druid can heal; a tank is a combat
 role. In "hile ås/åss" the intended object is oss (us), not a hill. But preserve
 literal hills in geographical sentences. Correct spelling silently.
 Examples of intended meaning (English glosses, NOT a fixed output language):
@@ -70,10 +72,11 @@ def extract_translation(stdout):
 
 class CodexTranslator:
     def __init__(self, model='gpt-5.6-luna', effort='low', instructions=INSTRUCTIONS,
-                 target_language='English'):
-        if target_language not in LANGUAGES:
+                 target_language='English', source_language='Norwegian'):
+        if target_language not in LANGUAGES or source_language not in LANGUAGES:
             raise ValueError('Choose a language from the list.')
         self.target_language = target_language
+        self.source_language = source_language
         self.requested_model = model
         self.effort = effort
         self.instructions = instructions
@@ -137,13 +140,15 @@ class CodexTranslator:
         result = self._request('thread/start', {'cwd': self.folder.name,
             'ephemeral': True, 'sandbox': 'read-only', 'approvalPolicy': 'never',
             'model': self.requested_model, 'allowProviderModelFallback': False,
-            'baseInstructions': self.instructions.format(target_language=self.target_language) +
+            'baseInstructions': self.instructions.format(target_language=self.target_language,
+                source_language=self.source_language) +
                 '\nTranslate only the latest message independently.',
             'developerInstructions': '', 'environments': [], 'selectedCapabilityRoots': [],
             'serviceName': 'chatshift'})
         self.thread_id = result['thread']['id']
         self.model = result.get('model')
         self.session_language = self.target_language
+        self.session_source_language = self.source_language
         self.turn_count = 0
         if previous:
             self._request('thread/unsubscribe', {'threadId': previous})
@@ -211,28 +216,53 @@ class CodexTranslator:
         self.cache.clear()
         self._shutdown()
 
-    def translate(self, text, unused_key='', target_language=None):
+    def prepare_next(self):
+        """Rotate a full session after delivery, without making a model request.
+
+        Called on the delivery worker, never on the UI thread. Translation still
+        performs the same rotation itself if preparation has not happened yet.
+        """
+        with self.lock:
+            if self.closed or self.turn_count < 5:
+                return
+            if not self.process or self.process.poll() is not None:
+                return
+            try:
+                self._new_thread()
+            except Exception:
+                # Delivery already succeeded. Reconnect on the next request rather
+                # than turn a preparation failure into a failed/sent-again message.
+                self._shutdown()
+
+    def translate(self, text, unused_key='', target_language=None, source_language=None):
+        timing_start = time.perf_counter()
         text = text.strip()
         if not text or len(text) > 1000:
             raise ValueError('Write a message of 1–1000 characters.')
         if text.startswith('/'):
             raise ValueError('Choose your game channel first. Enter only the message, without slash commands.')
         with self.lock:
+            locked_at = time.perf_counter()
             language = target_language or self.target_language
-            if language not in LANGUAGES:
+            source = source_language or self.source_language
+            if language not in LANGUAGES or source not in LANGUAGES:
                 raise ValueError('Choose a language from the list.')
             if self.closed:
                 raise ValueError('The translator is closed.')
-            cache_key = (language, text)
+            cache_key = (source, language, text)
             cached = self.cache.get(cache_key)
             if cached and time.monotonic() - cached[0] < 300:
                 self.cache.move_to_end(cache_key)
                 self.cache_hits += 1
                 self.target_language = language
+                self.source_language = source
+                self.last_timing = {'cached': True, 'total_ms': round((time.perf_counter() - timing_start) * 1000, 1)}
                 return cached[1]
             try:
                 language_changed = language != getattr(self, 'session_language', self.target_language)
+                language_changed |= source != getattr(self, 'session_source_language', self.source_language)
                 self.target_language = language
+                self.source_language = source
                 if not self.process or self.process.poll() is not None:
                     self._start()
                 elif language_changed or self.turn_count >= 5:
@@ -240,12 +270,15 @@ class CodexTranslator:
                 self.pending.clear()
                 self.last_usage = None
                 deadline = time.monotonic() + 30
+                prepared_at = time.perf_counter()
                 result = self._request('turn/start', {'threadId': self.thread_id,
                     'input': [{'type': 'text', 'text': text, 'text_elements': []}],
                     'effort': self.effort, 'outputSchema': {'type': 'object', 'properties': {
                         'translation': {'type': 'string'}}, 'required': ['translation'],
                         'additionalProperties': False}}, deadline)
                 turn_id = result['turn']['id']
+                accepted_at = time.perf_counter()
+                message_at = None
                 messages = []
                 while True:
                     event = self.pending.popleft() if self.pending else self._receive(deadline)
@@ -270,6 +303,14 @@ class CodexTranslator:
                         self.cache.move_to_end(cache_key)
                         while len(self.cache) > 64:
                             self.cache.popitem(last=False)
+                        finished_at = time.perf_counter()
+                        self.last_timing = {'cached': False,
+                            'lock_ms': round((locked_at - timing_start) * 1000, 1),
+                            'session_ms': round((prepared_at - locked_at) * 1000, 1),
+                            'request_ack_ms': round((accepted_at - prepared_at) * 1000, 1),
+                            'generation_and_network_ms': round(((message_at or finished_at) - accepted_at) * 1000, 1),
+                            'completion_ms': round((finished_at - (message_at or finished_at)) * 1000, 1),
+                            'total_ms': round((finished_at - timing_start) * 1000, 1)}
                         return translation
                     if params.get('turnId') != turn_id:
                         continue
@@ -278,6 +319,7 @@ class CodexTranslator:
                         if item.get('type') not in ('userMessage', 'agentMessage', 'reasoning'):
                             raise ValueError('Unexpected translator response. Nothing was sent.')
                         if method == 'item/completed' and item.get('type') == 'agentMessage':
+                            message_at = time.perf_counter()
                             messages.append(json.dumps({'type': 'item.completed', 'item': {
                                 'type': 'agent_message', 'text': item['text']}}))
             except Exception:

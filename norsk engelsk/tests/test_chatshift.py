@@ -130,6 +130,32 @@ class InputTests(unittest.TestCase):
         finally:
             win.kernel32.CloseHandle(first)
 
+    def test_preserved_paste_payload_is_not_mistaken_for_readback(self):
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(win, 'check_focus'))
+            stack.enter_context(patch.object(win, 'shortcut'))
+            write = stack.enter_context(patch.object(win, 'clipboard_write'))
+            read = stack.enter_context(patch.object(win, 'clipboard_read', return_value='Hello'))
+            stack.enter_context(patch.object(win.user32, 'GetClipboardSequenceNumber', return_value=10))
+            stack.enter_context(patch.object(win.time, 'monotonic', side_effect=[0, 0, 2]))
+            stack.enter_context(patch.object(win.time, 'sleep'))
+            with self.assertRaises(ValueError):
+                win.capture((1, 2, 3), 4, threading.Event(), preserve_clipboard=True)
+            write.assert_not_called()
+            read.assert_not_called()
+
+    def test_preserved_clipboard_accepts_fresh_copy_only(self):
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(win, 'check_focus'))
+            stack.enter_context(patch.object(win, 'shortcut'))
+            write = stack.enter_context(patch.object(win, 'clipboard_write'))
+            stack.enter_context(patch.object(win, 'clipboard_read', return_value='Hello'))
+            stack.enter_context(patch.object(win.user32, 'GetClipboardSequenceNumber', side_effect=[10, 11, 12]))
+            stack.enter_context(patch.object(win.time, 'sleep'))
+            result = win.capture((1, 2, 3), 4, threading.Event(), collapse=False, preserve_clipboard=True)
+            self.assertEqual(result, 'Hello')
+            write.assert_not_called()
+
 
 class TransactionTests(unittest.TestCase):
     def setUp(self):

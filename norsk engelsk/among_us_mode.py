@@ -88,6 +88,7 @@ def run(target, owner, key, cancel, send=True, translate_fn=None, progress=None)
         if cancel.is_set():
             raise ValueError('Cancelled. Check the chat field before retrying.')
         win.check_focus(target)
+    report('Waiting for shortcut release')
     win.wait_release(target, cancel)
     report('Among Us: reading the chat field locally…')
     original = read_field(target)

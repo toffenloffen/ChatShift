@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs><filter id="glow"><feGaussianBlur stdDeviation="9"/></filter></defs>
+  <rect x="4" y="4" width="247" height="247" rx="54" fill="#090d18" stroke="#273a53" stroke-width="2"/>
+  <path d="M67 43H193L216 66V165L193 188H119L66 221V188L40 162V70Z" fill="none" stroke="#986dff" stroke-width="8" filter="url(#glow)"/>
+  <path d="M67 43H193L216 66V165L193 188H119L66 221V188L40 162V70Z" fill="#142139" stroke="#aa8bff" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M78 92H179L158 71M179 92L158 113" fill="none" stroke="#66ffe1" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M178 143H78L99 122M78 143L99 164" fill="none" stroke="#b89aff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M168 213H185M199 213H213" stroke="#66ffe1" stroke-width="5" stroke-linecap="round"/>
+</svg>

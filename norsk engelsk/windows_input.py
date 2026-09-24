@@ -6,7 +6,7 @@ import queue
 import threading
 import time
 import uuid
-from shortcuts import validate_binding, normalize_modifiers
+from shortcuts import validate_binding, normalize_modifiers, NUMPAD_ENTER
 
 user32 = C.WinDLL('user32', use_last_error=True)
 kernel32 = C.WinDLL('kernel32', use_last_error=True)
@@ -40,6 +40,25 @@ class INPUT(C.Structure):
 class KBDLLHOOKSTRUCT(C.Structure):
     _fields_ = [('vkCode', W.DWORD), ('scanCode', W.DWORD), ('flags', W.DWORD),
                 ('time', W.DWORD), ('dwExtraInfo', C.c_size_t)]
+
+
+class MSLLHOOKSTRUCT(C.Structure):
+    _fields_ = [('pt', W.POINT), ('mouseData', W.DWORD), ('flags', W.DWORD),
+                ('time', W.DWORD), ('dwExtraInfo', C.c_size_t)]
+
+
+def mouse_button_event(message, data):
+    if message in (0x0207, 0x0208):
+        return 4, message == 0x0207
+    if message in (0x020B, 0x020C):
+        button = (data >> 16) & 0xFFFF
+        if button in (1, 2):
+            return 4 + button, message == 0x020B
+    return None
+
+
+def keyboard_key(vk, flags):
+    return NUMPAD_ENTER if vk == 13 and flags & 0x01 else vk
 
 
 class GUITHREADINFO(C.Structure):
@@ -86,6 +105,32 @@ _hotkeys = queue.Queue()
 _hotkey_thread = None
 _listener = None
 _binding = None
+_voice_binding = {'modifiers': [], 'key': None}
+_voice_enabled = False
+_text_enabled = True
+_voice_events = queue.Queue()
+
+
+def configure_modes(text_enabled, voice_enabled, voice_binding):
+    global _text_enabled, _voice_enabled, _voice_binding
+    _text_enabled = bool(text_enabled)
+    _voice_enabled = bool(voice_enabled)
+    _voice_binding = validate_binding(voice_binding)
+
+
+def poll_voice():
+    try:
+        return _voice_events.get_nowait()
+    except queue.Empty:
+        return None
+
+
+class HotkeyTarget(tuple):
+    """Window identity with a monotonic shortcut timestamp, never typed text."""
+    def __new__(cls, target):
+        value = super().__new__(cls, target)
+        value.pressed_at = time.perf_counter()
+        return value
 
 
 def set_binding(binding):
@@ -136,8 +181,11 @@ class HotkeyState:
         if self.binding is None:
             matches = vk == 13 and self.modifiers in ({0xA3}, {0xA5}, {0xA2, 0xA5}, {0xA4}, {0xA2, 0xA4})
         else:
+            held = normalize_modifiers(self.modifiers)
+            if self.binding['key'] in self.MODIFIERS:
+                held.discard(self.binding['key'])
             matches = (vk == self.binding['key'] and
-                       normalize_modifiers(self.modifiers) == set(self.binding['modifiers']))
+                       held == set(self.binding['modifiers']))
         if down and matches and allow:
             self.swallowed = True
             self.swallowed_key = vk
@@ -173,11 +221,34 @@ def register():
         return True
     while poll_hotkey():
         pass
+    while poll_voice():
+        pass
     ready = queue.Queue()
     def listen():
         global _hotkey_thread
         _hotkey_thread = kernel32.GetCurrentThreadId()
         state = HotkeyState(_binding)
+        voice_state = HotkeyState(_voice_binding)
+        def voice_feed(key, down, own):
+            voice_state.binding = _voice_binding
+            if down and not own and key == _voice_binding['key']:
+                voice_state.modifiers = {vk for vk in voice_state.MODIFIERS
+                                        if user32.GetAsyncKeyState(vk) & 0x8000}
+            released = not down and voice_state.swallowed and key == voice_state.swallowed_key
+            swallowed, triggered = voice_state.feed(key, down, own=own,
+                allow=_voice_enabled and external(foreground()))
+            if triggered:
+                try:
+                    _diagnostics['voice_shortcut_down'] = _diagnostics.get('voice_shortcut_down', 0) + 1
+                    if voice_state.modifiers & {0xA4, 0xA5}:
+                        emit([(0xE8, 0, 0), (0xE8, 0, 2)])
+                    _voice_events.put(('down', HotkeyTarget(focus_snapshot()), last_input()))
+                except ValueError:
+                    pass
+            if released and not own:
+                _diagnostics['voice_shortcut_up'] = _diagnostics.get('voice_shortcut_up', 0) + 1
+                _voice_events.put(('up', None, last_input()))
+            return swallowed
         state.modifiers = {vk for vk in state.MODIFIERS if user32.GetAsyncKeyState(vk) & 0x8000}
         @HOOKPROC
         def callback(code, message, pointer):
@@ -186,6 +257,18 @@ def register():
                 event = C.cast(pointer, C.POINTER(KBDLLHOOKSTRUCT)).contents
                 state.binding = _binding
                 down = message in (0x0100, 0x0104)
+                key = keyboard_key(event.vkCode, event.flags)
+                if voice_feed(key, down, event.dwExtraInfo == OWN_INPUT):
+                    return 1
+                candidate = key == (state.binding['key'] if state.binding else 13)
+                if candidate and down and event.dwExtraInfo != OWN_INPUT:
+                    # Reconcile held modifiers before matching a trigger. A key-up can
+                    # be missed when another application changes input capture.
+                    state.modifiers = {vk for vk in state.MODIFIERS
+                                       if user32.GetAsyncKeyState(vk) & 0x8000}
+                    _diagnostics['shortcut_key_seen'] = _diagnostics.get('shortcut_key_seen', 0) + 1
+                    _diagnostics['shortcut_modifiers'] = sorted(state.modifiers)
+                    _diagnostics['shortcut_external'] = external(foreground())
                 if event.vkCode == 13 and down and event.dwExtraInfo != OWN_INPUT:
                     # Only count the requested shortcut and its left-side counterpart.
                     # No typed text or ordinary key events are retained.
@@ -197,10 +280,9 @@ def register():
                         _diagnostics['right_ctrl_enter'] += 1
                     elif 0xA2 in state.modifiers:
                         _diagnostics['left_ctrl_enter'] += 1
-                swallow, trigger = state.feed(event.vkCode, down,
+                swallow, trigger = state.feed(key, down,
                     own=event.dwExtraInfo == OWN_INPUT,
-                    allow=external(foreground()) if event.vkCode ==
-                        (state.binding['key'] if state.binding else 13) else True)
+                    allow=_text_enabled and external(foreground()))
                 if (down and event.dwExtraInfo != OWN_INPUT and not swallow
                         and event.vkCode not in state.MODIFIERS):
                     # Repeating the shortcut must not cancel a pending translation.
@@ -213,15 +295,52 @@ def register():
                         # the application's menu after Enter was suppressed.
                         if state.modifiers & {0xA4, 0xA5}:
                             emit([(0xE8, 0, 0), (0xE8, 0, 2)])
-                        _hotkeys.put(focus_snapshot())
+                        _hotkeys.put(HotkeyTarget(focus_snapshot()))
                     except ValueError:
+                        _diagnostics['shortcut_focus_failed'] = _diagnostics.get('shortcut_focus_failed', 0) + 1
                         pass
                 if swallow:
                     return 1
             return user32.CallNextHookEx(None, code, message, pointer)
+        @HOOKPROC
+        def mouse_callback(code, message, pointer):
+            global _input_revision
+            if code >= 0:
+                event = C.cast(pointer, C.POINTER(MSLLHOOKSTRUCT)).contents
+                button = mouse_button_event(message, event.mouseData)
+                if button:
+                    vk, down = button
+                    if voice_feed(vk, down, event.dwExtraInfo == OWN_INPUT):
+                        return 1
+                    state.binding = _binding
+                    if state.binding and vk == state.binding['key'] and down and event.dwExtraInfo != OWN_INPUT:
+                        state.modifiers = {mod for mod in state.MODIFIERS
+                                           if user32.GetAsyncKeyState(mod) & 0x8000}
+                        _diagnostics['shortcut_key_seen'] = _diagnostics.get('shortcut_key_seen', 0) + 1
+                        _diagnostics['shortcut_modifiers'] = sorted(state.modifiers)
+                        _diagnostics['shortcut_external'] = external(foreground())
+                    swallow, trigger = state.feed(vk, down, own=event.dwExtraInfo == OWN_INPUT,
+                        allow=_text_enabled and external(foreground()))
+                    if trigger:
+                        try:
+                            _hotkeys.put(HotkeyTarget(focus_snapshot()))
+                            _diagnostics['intercepted'] += 1
+                        except ValueError:
+                            pass
+                    if swallow:
+                        return 1
+                if message in (0x0201, 0x0204, 0x0207, 0x020B) and event.dwExtraInfo != OWN_INPUT:
+                    _input_revision += 1
+            return user32.CallNextHookEx(None, code, message, pointer)
+
         hook = user32.SetWindowsHookExW(13, callback, kernel32.GetModuleHandleW(None), 0)
-        ready.put(bool(hook))
-        if not hook:
+        mouse_hook = user32.SetWindowsHookExW(14, mouse_callback, kernel32.GetModuleHandleW(None), 0)
+        ready.put(bool(hook and mouse_hook))
+        if not hook or not mouse_hook:
+            if hook:
+                user32.UnhookWindowsHookEx(hook)
+            if mouse_hook:
+                user32.UnhookWindowsHookEx(mouse_hook)
             return
         msg = W.MSG()
         try:
@@ -229,6 +348,7 @@ def register():
                 pass
         finally:
             user32.UnhookWindowsHookEx(hook)
+            user32.UnhookWindowsHookEx(mouse_hook)
     _listener = threading.Thread(target=listen, daemon=True)
     _listener.start()
     return ready.get(timeout=3)
@@ -264,9 +384,12 @@ def last_input():
     return _input_revision
 
 
-def wait_release(target, cancel):
+def wait_release(target, cancel, binding=None):
     deadline = time.monotonic() + 3
-    trigger_key = _binding['key'] if _binding else 0x0D
+    current = _binding if binding is None else binding
+    trigger_key = (current['key'] if current else 0x0D) or 0x0D
+    if trigger_key == NUMPAD_ENTER:
+        trigger_key = 13
     while any(user32.GetAsyncKeyState(vk) & 0x8000 for vk in (trigger_key, 0x10, 0x11, 0x12, 0x5B, 0x5C)):
         if cancel.is_set() or focus_snapshot() != target:
             raise ValueError('Cancelled.')
@@ -346,13 +469,19 @@ def clipboard_read():
         user32.CloseClipboard()
 
 
-def capture(target, owner, cancel, collapse=True):
+def capture(target, owner, cancel, collapse=True, preserve_clipboard=False):
     check_focus(target)
     marker = 'chatshift-' + uuid.uuid4().hex
-    clipboard_write(marker, owner)
+    if not preserve_clipboard:
+        clipboard_write(marker, owner)
     sequence = user32.GetClipboardSequenceNumber()
     shortcut(target, ord('A'))
     time.sleep(0.06)
+    if preserve_clipboard:
+        # Keep the paste payload available until the target processes Ctrl+V.
+        # Only a fresh clipboard update after selection may count as readback;
+        # the existing translated clipboard text alone never proves insertion.
+        sequence = user32.GetClipboardSequenceNumber()
     shortcut(target, ord('C'))
     deadline = time.monotonic() + 1
     text = None
@@ -370,5 +499,6 @@ def capture(target, owner, cancel, collapse=True):
     if collapse:
         check_focus(target)
         emit([(0x27, 0, 0), (0x27, 0, 2)])
-        time.sleep(0.04)
+        # No readback depends on the caret repaint. Input stays ordered and the
+        # transaction verifies the draft again after translation.
     return text

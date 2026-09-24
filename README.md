@@ -1,6 +1,13 @@
 # ChatShift
 
-**Write your way. Chat with the world.**
+**Your words. More worlds.**
+
+Write or speak in your own language, right where you already chat. ChatShift puts
+the translation into your game or app's chat field. Review it before sending, or
+enable automatic sending. No separate translation window during normal use.
+
+**New here? Follow the [Quick start guide](GET_STARTED.md)** for installation,
+text and voice setup, shortcuts and your first message.
 
 **Work in progress — experimental prototype.** The current implementation runs on
 Windows. SteamOS / Steam Deck support is a planned development direction and is **not
@@ -8,15 +15,15 @@ implemented yet**. Downloading this repository on a Deck gives you the source co
 not a working SteamOS application. See [SteamOS development notes](STEAMOS.md).
 
 ChatShift is an experimental Windows desktop app that translates the message you are
-writing directly in a supported chat field. You write in Norwegian, press your chosen
+writing directly in a supported chat field. You select your source language, press your chosen
 keyboard shortcut, and the app replaces your draft with a translation into your selected
 language. It can then send the message automatically, or leave it for you to review.
 
 It is designed for people who want to join a conversation without stopping to translate
 every message manually. That includes gamers, people less comfortable writing in another
 language, and people with dyslexia or other spelling difficulties. The translator is
-instructed to interpret Norwegian spelling mistakes, dialect and gaming terms in context,
-so you do not have to write perfect Norwegian first. It can still misunderstand a message.
+instructed to interpret spelling mistakes, dialect and gaming terms in context,
+so you do not have to write perfectly first. It can still misunderstand a message.
 
 For example, the intended meaning of a message like **“kan du hile meg, æ e såra”** is
 **“Can you heal me? I'm hurt.”** The goal is to translate what you mean, including gaming
@@ -26,11 +33,28 @@ illustrates the intended behavior; individual model responses can vary.
 ## Features
 
 - Translate your outgoing draft in place, without switching to a separate translation window.
-- Choose from 26 target languages. The current source language is Norwegian.
+- Choose both source and target from 26 languages. Matching languages request spelling correction.
 - Record your own keyboard shortcut, with separate support for left and right modifier keys.
 - Send automatically after translation, or review the translated draft before sending.
 - Save your language, shortcut and sending preferences between sessions.
+- See your shortcut highlighted on a keyboard, including left/right modifier keys or F10 alone.
+- Open **Help & setup** for the official Codex setup link, usage instructions and troubleshooting.
+- Disable text translation independently when you do not need it.
 - Reuse recent identical translations to avoid unnecessary model requests.
+
+**Experimental local voice:** install `requirements-voice.txt` with pip and enable **Voice input**.
+In the Voice tab, click the pictured keys or mouse buttons to choose a voice shortcut.
+Choose **Hold to talk** or **Press to start · press again to stop**. Wait for voice to load,
+open your game's chat field, and speak using the shortcut. The language choices at the top
+apply to both text and voice. Voice inserts a draft for review by default; its own checkbox
+enables automatic sending after readback verification. Choosing a shortcut already used
+by the other mode moves it to the mode you are editing.
+Keep the same chat field active until insertion finishes.
+
+The first run downloads Whisper small; recognition runs locally on the CPU without a speech API key.
+Audio stays on your PC; recognized text goes to Luna when languages differ.
+**Microphone test → Open test** opens a separate quality test that never sends anything into your game.
+Game integration and other hardware still need manual testing. See [voice status](VOICE.md).
 
 ChatShift uses GPT-5.6 Luna through the installed Codex app server and your own ChatGPT
 sign-in. Internet access and an eligible account are required; no API key is needed for
@@ -39,30 +63,37 @@ the current backend. It is an independent project, not an official OpenAI produc
 **Compatibility:** most fields need selecting, copying and pasting. An optional experimental
 Among Us adapter reads the existing field with local OCR and types the translation in place.
 It passed a short local-lobby test at 2560×1440, but later field-detection failures remain.
-The user reported successful WoW use; other configurations require individual testing. It translates your outgoing
+Text use has been reported working in WoW and Valheim, and voice insertion was manually
+tested in Valheim. Other configurations require individual testing. It translates your outgoing
 draft, not other players' messages. See [compatibility findings](COMPATIBILITY.md).
 
 ## How it works
 
-1. Open ChatShift and choose your target language. You can also choose **Change shortcut**.
-2. Write your message in a supported chat field. The current version accepts Norwegian input;
-   support for more input languages is planned.
+1. Open ChatShift and choose **From** and **To** languages. Select your shortcut in the keyboard or mouse picture.
+2. Write your message in a supported chat field in your selected source language.
 3. Press your shortcut once, then release the keys. The default is **Right Ctrl + Enter**;
    **Alt + Enter** also works with the default settings.
-4. Stay in the same field. ChatShift replaces the text with its translation and sends Enter.
+4. Stay in the same field. ChatShift replaces the text with its translation. It sends Enter only when automatic sending is enabled.
 
 **Press once, then wait about 1–3 seconds.** This is an approximate range from limited
 local tests, not a measured average or a guarantee; it can take longer. Avoid typing or
 pressing the shortcut or Enter again while waiting. Pressing Enter can send the original
 message before translation finishes.
 
-Open ChatShift from the taskbar to choose one of 26 target languages or turn off automatic
-sending to review the translation first. Source text is currently Norwegian. Preferences
+Open ChatShift from the taskbar to change either language or turn off automatic
+sending to review the translation first. Existing settings default to Norwegian input. Preferences
 are saved automatically. The app starts ready in the background after warming up.
 
-Choose **Change shortcut**, hold Ctrl or Alt (optionally Shift), and press your preferred
-key. Left and right modifier keys are distinguished. Your saved combination replaces both
-default shortcuts. Escape cancels recording; **Restore default** restores the original keys.
+The keyboard picture highlights your saved shortcut.
+Left-click a supported key or mouse button in the picture to save it immediately. Click
+the selected button again to remove it. To select
+a combination, hold the right mouse button, left-click the desired keys, then release
+the right mouse button to save. Right mouse is only a selection gesture, not part of the
+saved shortcut. **How to set up** explains the gestures, and **Cancel selection** discards
+unfinished selections. Click the mouse picture to assign wheel click or either standard
+side button. Number-pad shortcuts require Num Lock on. Dimmed keys are unavailable.
+Left and right modifier keys are distinguished, as are Enter and Num Enter. Your saved
+combination replaces both default shortcuts. Removing the last button disables the shortcut.
 
 ## Install
 
@@ -72,7 +103,8 @@ Tested locally with Windows and Python 3.13. Other Windows configurations are no
 
 1. Download or clone this repository.
 2. Run `./setup.ps1` in PowerShell from the project directory.
-3. Open `norsk engelsk/Start ChatShift.vbs`.
+3. For voice, run `./.venv/Scripts/python.exe -m pip install -r requirements-voice.txt`.
+4. Open `norsk engelsk/Start ChatShift.vbs`.
 
 For experimental Among Us support, also run `./setup_ocr.ps1` and restart ChatShift.
 Windows OCR support for Norwegian and English (United Kingdom) must be installed.
@@ -96,6 +128,8 @@ Official [Codex sign-in documentation](https://learn.chatgpt.com/docs/auth).
 - By default both Alt keys are intercepted with Enter, including an application's fullscreen shortcut.
   A custom shortcut may also conflict with shortcuts in other apps; choose one you do not already use.
 - The clipboard is overwritten. Prior clipboard contents are not restored.
+- Always open the chat field first. ChatShift cannot reliably detect whether game chat
+  is open. Voice may still be processed and insertion attempted without an editable field.
 - If focus or text changes, copying fails, the model fails, or pasting cannot be verified, sending stops.
   If a failure occurs after pasting, inspect the field before retrying.
 - Translations can still be wrong. Review mode is recommended when accuracy matters.
@@ -111,7 +145,7 @@ The OpenAI service processes the text according to your account's data settings.
 
 Recent messages and translations exist in memory: a model session is rotated after five
 requests, and up to 64 identical translations are cached for five minutes. Cached results
-are separated by target language and cleared when the app closes. ChatShift does not write
+are separated by source and target language and cleared when the app closes. ChatShift does not write
 message contents to its settings or status files. Codex uses ephemeral sessions.
 
 There is no continuous translation or polling of the model. One request warms it up at startup;

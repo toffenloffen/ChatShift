@@ -14,12 +14,14 @@ def run(target, owner, key, cancel, send=True, translate_fn=translate, progress=
             raise ValueError('Cancelled. Kontroller tekstfeltet før du prøver igjen.')
         win.check_focus(target)
 
+    report('Waiting for shortcut release')
     win.wait_release(target, cancel)
     check()
-    def capture(stage, collapse=True):
+    def capture(stage, collapse=True, preserve_clipboard=False):
         report(stage)
         try:
-            return win.capture(target, owner, cancel, collapse=collapse)
+            return win.capture(target, owner, cancel, collapse=collapse,
+                               preserve_clipboard=preserve_clipboard)
         except ValueError as exc:
             raise ValueError(stage + ': ' + str(exc)) from exc
 
@@ -36,9 +38,9 @@ def run(target, owner, key, cancel, send=True, translate_fn=translate, progress=
     report('Inserting the translation')
     win.clipboard_write(translated, owner)
     win.shortcut(target, ord('V'))
-    time.sleep(0.16)
+    time.sleep(0.02)  # Allow a frame before selection; keep the paste payload intact.
     check()
-    if capture('Verifying the translated text', collapse=False) != translated:
+    if capture('Verifying the translated text', collapse=False, preserve_clipboard=True) != translated:
         raise ValueError('Could not verify the pasted text. Enter was not sent; check the field.')
     check()
     if send:

@@ -135,10 +135,13 @@ def main():
             translate_fn = translate_with_repeat
         completed = queue.Queue()
         clipboard_owner = owner.winfo_id()
+        stages = []
+        measurement_start = time.perf_counter()
         def run_translation():
             try:
                 completed.put(direct_mode.run(target, clipboard_owner, 'fake', threading.Event(),
-                    translate_fn=translate_fn))
+                    translate_fn=translate_fn,
+                    progress=lambda stage: stages.append((stage, time.perf_counter()))))
             except Exception as exc:
                 completed.put(exc)
         threading.Thread(target=run_translation, daemon=True).start()
@@ -151,6 +154,14 @@ def main():
             raise outcome
         result, elapsed = outcome
         submitted = lines.get(timeout=2)
+        observed_at = time.perf_counter()
+        if '--timing' in sys.argv:
+            if '--codex' in sys.argv:
+                print('TIMING backend:', json.dumps(online.last_timing))
+            for index, (stage, stamp) in enumerate(stages):
+                end = stages[index + 1][1] if index + 1 < len(stages) else observed_at
+                print(f'TIMING {stage}: {(end - stamp) * 1000:.1f} ms')
+            print(f'TIMING worker start to test-field Return handler: {(observed_at - measurement_start) * 1000:.1f} ms')
         if expected is None:
             expected = result
             stem = {'English': 'wait', 'French': 'attend', 'German': 'wart', 'Spanish': 'esper'}[language]
