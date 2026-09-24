@@ -1,6 +1,7 @@
 """Optional CPU speech recognition. Audio stays in memory and on this computer."""
 from pathlib import Path
 import threading
+from gaming_glossary import SPEECH_GAMING_HINTS
 
 LANGUAGE_CODES = dict(zip(
     ('English', 'Arabic', 'Chinese (Simplified)', 'Czech', 'Danish', 'Dutch',
@@ -24,6 +25,7 @@ class LocalTranscriber:
             raise ValueError('Choose a supported spoken language.')
         segments, _ = self.model.transcribe(audio, language=LANGUAGE_CODES[language],
             beam_size=3, vad_filter=True, condition_on_previous_text=False,
+            hotwords=SPEECH_GAMING_HINTS,
             vad_parameters={'min_silence_duration_ms': 350})
         text = ' '.join(segment.text.strip() for segment in segments).strip()
         if not text:

@@ -49,6 +49,7 @@ These changes are in the repository source and setup flow, not a new standalone 
 - Translate your outgoing draft in place, without switching to a separate translation window.
 - Choose both source and target from 26 languages. Matching languages correct typed text; voice provides dictation without translation.
 - Context-aware [gaming vocabulary](GAMING_TERMS.md), including heal, DPS, aggro, CC and OOM.
+- Gaming spelling hints for local speech recognition, shared by voice input and the microphone test.
 - Choose a shortcut in the keyboard or mouse picture, with separate left/right modifier keys.
 - Choose automatic sending separately in **Text** and **Voice**, or review before sending.
 - Save your language, shortcut and sending preferences between sessions.

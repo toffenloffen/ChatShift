@@ -12,8 +12,12 @@ water tanks, pet pugs and office bosses must keep their ordinary meaning. Ambigu
 abbreviations must not be expanded by guesswork. Negations, numbers, names and the
 speaker's intended recipient must be preserved.
 
-Whisper's recognition is unchanged. This glossary cannot reliably recover words
-that were lost during speech recognition. Review voice drafts before sending.
+Whisper receives a short list of these gaming spellings as recognition hints in
+both voice input and the microphone test. The selected spoken language still applies.
+These hints are not forced replacements or extra model training; they may help with
+game vocabulary but can also bias recognition. They do not include a complete list
+of game locations or character names. Review voice drafts before sending, including
+ordinary non-gaming speech. Luna cannot reliably recover words lost in recognition.
 
 ## Sources and review
 

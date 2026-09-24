@@ -1,4 +1,12 @@
-"""Curated context for translation, not unconditional word replacement."""
+"""Gaming vocabulary hints; never unconditional word replacement."""
+# Spellings only: speech recognition must not receive translation instructions or
+# example sentences that it could mistake for spoken content.
+SPEECH_GAMING_HINTS = (
+    'heal, healer, healing, tank, DPS, aggro, threat, pull, adds, mob, boss, wipe, '
+    'CC, AoE, DoT, HoT, OOM, cooldown, CD, LoS, rez, res, buff, debuff, proc, '
+    'kite, peel, taunt, interrupt, kick, PUG, LFG, LFM, BiS, loot, raid, dungeon, '
+    'AFK, BRB, GG, WP'
+)
 GAMING_CONTEXT = '''Gaming vocabulary across source languages (including English loanwords):
 heal/healer = restore health/the healing role; tank = the role taking enemy attacks;
 DPS = damage per second or a damage-dealing role, depending on the sentence.

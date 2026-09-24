@@ -7,6 +7,9 @@ Voice is off by default and has no default shortcut. Enable it, choose a shortcu
 wait for Voice ready, and open a chat field before speaking. Release in hold mode, or press again
 in toggle mode. Choosing a shortcut used by the other mode moves it to this mode.
 Review before sending is the default.
+Whisper receives short gaming vocabulary hints, such as healer, DPS and aggro.
+These guide recognition without forcing replacements; check ordinary speech and game
+names too. Recognition quality still needs testing with your voice and game audio.
 Focus changes, other input, pause or closing cancel pending delivery. The recorder has a 30-second limit.
 Automatic sending requires a verified readback and never sends on a failed verification.
 
