@@ -66,11 +66,13 @@ class ControllerPreview(tk.Canvas):
             self.create_rectangle(285, 113, 415, 215, fill='#1b2032', outline='#46516e', width=2)
             self.create_text(350, 157, text='REAR VIEW', fill='#a6acc6', font=('Segoe UI', 10, 'bold'))
             self.create_text(350, 180, text='via Steam Input', fill='#b69aff', font=('Segoe UI', 9))
+            self.create_text(226, 101, text='RIGHT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
+            self.create_text(474, 101, text='LEFT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
             self.buttons = {
-                'Rear upper left': (186, 118, 267, 157, 'Upper', False),
-                'Rear lower left': (186, 176, 267, 215, 'Lower', False),
-                'Rear upper right': (433, 118, 514, 157, 'Upper', False),
-                'Rear lower right': (433, 176, 514, 215, 'Lower', False)}
+                'Rear right upper (right hand)': (186, 118, 267, 157, 'Right upper', False),
+                'Rear right lower (right hand)': (186, 176, 267, 215, 'Right lower', False),
+                'Rear left upper (left hand)': (433, 118, 514, 157, 'Left upper', False),
+                'Rear left lower (left hand)': (433, 176, 514, 215, 'Left lower', False)}
         face_colors = {'A': '#80dc9b', 'B': '#ff969f', 'X': '#8cc9ff', 'Y': '#ffe193'}
         for index, (name, (x1, y1, x2, y2, label, round_button)) in enumerate(self.buttons.items()):
             tag = 'button_' + str(index)
@@ -86,6 +88,6 @@ class ControllerPreview(tk.Canvas):
                              fill='#b8ffce' if selected else face_colors.get(name, '#e2e7fa'),
                              font=('Segoe UI', 10, 'bold'), tags=tag)
             self.tag_bind(tag, '<Button-1>', lambda e, n=name: self.pick(n))
-        self.create_text(350, 294, text=('Illustrative paddle positions · Click for keyboard mapping setup'
+        self.create_text(350, 294, text=('Rear view · Left / right refer to your hands while playing (mirrored here)'
                          if self.view == 'back' else 'LS / RS = press the stick · Click buttons to combine them'),
                          fill='#a6acc6', font=('Segoe UI', 9))
