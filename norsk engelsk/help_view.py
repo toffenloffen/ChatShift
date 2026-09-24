@@ -5,6 +5,9 @@ import webbrowser
 
 SETUP_URL = 'https://learn.chatgpt.com/docs/windows/windows-app'
 SECTIONS = {'Get started': ('Start here',
+                 'If you have not finished installation, run Install ChatShift.cmd from the '
+                 'extracted download and wait for Setup complete. It installs the voice components '
+                 'and downloads Whisper. Keep that folder; the desktop shortcut uses it.\n\n'
                  '1. Install Codex using the link below.\n'
                  'Open the official Codex setup page ↗\n'
                  '\n'
@@ -20,16 +23,23 @@ SECTIONS = {'Get started': ('Start here',
                  '\n'
                  '4. Choose From and To. These languages apply to both text and voice.\n'
                  '\n'
-                 '5. Enable Text translation, Voice input, or both. Choose a shortcut in each tab.\n'
+                 '5. Open Text and turn on Enable text translation, or open Voice and turn on '
+                 'Enable voice input. You can use both. Choose your shortcut in the matching tab. '
+                 'Changes save automatically.\n'
+                 '\n'
+                 '6. Leave automatic sending off for your first try. Each tab has its own sending option. '
+                 'For a microphone check without a game, open Voice → Microphone test → Open test.\n'
                  '\n'
                  'You need Windows, internet and an account with Codex access. ChatShift connects '
-                 'automatically. No API key is needed for text translation.'),
+                 'automatically. No API key is needed. This installer is for Windows. '
+                 'Check the GitHub platform guide for SteamOS / Linux availability.'),
  'How to use': ('Text or voice. Your choice.',
                 'TEXT\n'
                 'Open your chat, write a message, then press your text shortcut once.\n'
                 '\n'
                 'VOICE\n'
-                'Open your chat first. Hold your voice shortcut, speak, then release.\n'
+                'In Voice, select your microphone and wait for Voice ready. Open your chat first. '
+                'Hold your voice shortcut, speak, then release.\n'
                 'With Press to start selected, press once to record and again to finish.\n'
                 '\n'
                 'WAIT FOR THE RESULT\n'
@@ -38,8 +48,12 @@ SECTIONS = {'Get started': ('Start here',
                 'It usually took about 1–3 seconds in our short-message tests. It can take '
                 'longer.\n'
                 '\n'
-                'Voice can take longer. Text and voice have separate automatic sending options. '
-                'Leave automatic sending off to check and edit the result yourself.\n'
+                'Voice can take longer. In Text, use Send automatically after translating. '
+                'In Voice, use Send voice messages automatically. These options are independent. '
+                'Leave them off to read, edit and send the result yourself.\n'
+                '\n'
+                'ChatShift translates what you send, not other players\' messages. Always open '
+                'the chat field first; ChatShift cannot reliably tell whether game chat is open.\n'
                 '\n'
                 'Run in background hides ChatShift. Pause stops shortcuts. Closing the window '
                 'exits it.'),
@@ -63,7 +77,17 @@ SECTIONS = {'Get started': ('Start here',
                'Enter is separate from Enter. Dimmed keys cannot be chosen.\n'
                '\n'
                'Right mouse is only for selecting the combination. You do not need it when '
-               'translating.'),
+               'translating.\n'
+               '\n'
+               'CONTROLLER\n'
+               'Open Controller and turn on Enable controller. Select Text or Voice, then click '
+               'up to 3 buttons in the controller picture. Click again to remove. Changes save '
+               'automatically. Text or Voice must also be enabled in its own tab.\n'
+               'FRONT shows the normal buttons. BACK shows R4, R5, L4 and L5, labelled by the '
+               'hand you use while holding the controller.\n'
+               'Rear buttons need mapping to a keyboard shortcut in Steam Input or compatible '
+               'controller software. Clicking a rear button explains the setup; it does not map '
+               'the button for you. Controller buttons also reach the game, so choose an unused combination.'),
  'Troubleshooting': ('Need a hand?',
                      'NOT READY\n'
                      'Check your internet. Open Codex and sign in. Restart ChatShift.\n'
@@ -74,7 +98,9 @@ SECTIONS = {'Get started': ('Start here',
                      '\n'
                      'WRONG WORDS\n'
                      'Check From and To. Turn off automatic sending so you can correct the '
-                     'result.\n'
+                     'result. For voice, open Voice → Microphone test → Open test and compare '
+                     'the recognized text with the translation. Names and dialect words can be '
+                     'misheard even when the correct language is selected.\n'
                      '\n'
                      'TRANSLATION STOPPED\n'
                      'Check the message before trying again. Stay in the same field while '
@@ -83,11 +109,22 @@ SECTIONS = {'Get started': ('Start here',
                      'WORKS IN ONE APP, BUT NOT ANOTHER\n'
                      'Some games handle chat differently. Try another shortcut. Not every game is '
                      'supported. For keypad numbers, turn Num Lock on.\n'
+                     'If Alt + Enter changes fullscreen mode, the game received that shortcut. '
+                     'Check that ChatShift is active or choose another combination.\n'
                      '\n'
                      'VOICE DOES NOT START\n'
                      'Enable Voice input, choose a voice shortcut and wait for Voice ready. '
                      'Open your game chat before speaking. Under Microphone test, click Open test '
-                     'to check what the microphone hears. The test never types into your game.'),
+                     'to check what the microphone hears. The test never types into your game.\n'
+                     '\n'
+                     'WRONG MICROPHONE\n'
+                     'Choose your headset or microphone in Voice. This choice resets to the '
+                     'system default when you restart ChatShift.\n'
+                     '\n'
+                     'CONTROLLER DOES NOTHING\n'
+                     'Turn on the controller and check its connection status in Controller. '
+                     'If needed, try another controller number. Enable the matching Text or Voice '
+                     'mode and choose its controller buttons. Rear buttons need the mapping described in Shortcuts.'),
  'Privacy & usage': ('Good to know',
                      'Your messages go to OpenAI for translation and use your Codex allowance. '
                      'Usage limits depend on your account.\n'
@@ -99,8 +136,12 @@ SECTIONS = {'Get started': ('Start here',
                      'The optional Among Us feature reads the chat field from an image on your PC. '
                      'Only the recognized text is sent for translation.\n'
                      '\n'
-                     'Voice records only when you start it. Audio stays in memory on your PC. '
+                     'Voice records only when you start it. Whisper is AI that runs on your PC; '
+                     'it is installed by ChatShift setup, not included with Windows. Audio stays in memory on your PC. '
                      'Recognized text goes to Luna when translation is needed.\n'
+                     '\n'
+                     'ChatShift uses the clipboard when reading and inserting text. Its contents '
+                     'may be replaced.\n'
                      '\n'
                      'ChatShift is an independent project still in development. AI can make '
                      'mistakes.')}
@@ -116,8 +157,8 @@ def show_help(root, section=None):
     dialog = tk.Toplevel(root)
     root._chatshift_help = dialog
     dialog.title('ChatShift · Help & setup')
-    dialog.geometry('720x610')
-    dialog.minsize(600, 430)
+    dialog.geometry('820x680')
+    dialog.minsize(760, 430)
     dialog.configure(bg='#10111b')
     # Reserve this row before packing the expanding text; keep buttons visible at minimum size.
     actions = tk.Frame(dialog, bg='#10111b')
