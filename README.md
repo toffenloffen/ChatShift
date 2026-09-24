@@ -24,29 +24,33 @@ text and voice setup, shortcuts and your first message.
 only. Downloading this repository on a Deck currently provides the Windows source,
 not the separately developed SteamOS application.
 
-ChatShift is an experimental Windows desktop app that translates the message you are
-writing directly in a supported chat field. You select your source language, press your chosen
-keyboard shortcut, and the app replaces your draft with a translation into your selected
-language. It can then send the message automatically, or leave it for you to review.
+Designed for people who find writing in another language difficult. ChatShift uses
+context to interpret spelling mistakes, dialect and gaming terms, but translations
+can still be wrong. Start with automatic sending off and check your first messages.
 
-It is designed for people who want to join a conversation without stopping to translate
-every message manually. That includes gamers, people less comfortable writing in another
-language, and people with dyslexia or other spelling difficulties. The translator is
-instructed to interpret spelling mistakes, dialect and gaming terms in context,
-so you do not have to write perfectly first. It can still misunderstand a message.
+## What is new
 
-For example, the intended meaning of a message like **“kan du hile meg, æ e såra”** is
-**“Can you heal me? I'm hurt.”** The goal is to translate what you mean, including gaming
-slang, rather than turn every misspelled word into a literal translation. This example
-illustrates the intended behavior; individual model responses can vary.
+- **Settings grouped by mode:** Text and Voice each contain their own enable switch,
+  shortcut and automatic sending option. Status and Pause stay visible at the bottom.
+- **One controller picture:** normal buttons and L4/L5/R4/R5 appear together, with
+  green selection highlights. Rear buttons open mapping guidance; they require
+  Steam Input or compatible software and are not read independently by this Windows build.
+- **Gaming vocabulary:** terms such as heal, DPS, aggro, OOM and interrupt are interpreted
+  in context. This is not a complete game-location or character-name dictionary.
+- **Guided Windows setup:** installs the text and voice dependencies, downloads the
+  speech model and creates a desktop shortcut. Codex installation and sign-in remain your step.
+- **Microphone test:** inspect recognized speech and its translation without sending
+  a message to a game.
+
+These changes are in the repository source and setup flow, not a new standalone EXE release.
 
 ## Features
 
 - Translate your outgoing draft in place, without switching to a separate translation window.
-- Choose both source and target from 26 languages. Matching languages request spelling correction.
+- Choose both source and target from 26 languages. Matching languages correct typed text; voice provides dictation without translation.
 - Context-aware [gaming vocabulary](GAMING_TERMS.md), including heal, DPS, aggro, CC and OOM.
-- Record your own keyboard shortcut, with separate support for left and right modifier keys.
-- Send automatically after translation, or review the translated draft before sending.
+- Choose a shortcut in the keyboard or mouse picture, with separate left/right modifier keys.
+- Choose automatic sending separately in **Text** and **Voice**, or review before sending.
 - Save your language, shortcut and sending preferences between sessions.
 - See your shortcut highlighted on a keyboard, including left/right modifier keys or F10 alone.
 - Open **Help & setup** for the official Codex setup link, usage instructions and troubleshooting.
@@ -66,7 +70,7 @@ Keep the same chat field active until insertion finishes.
 
 Setup downloads and checks Whisper small; recognition runs locally on the CPU without a speech API key.
 Audio stays on your PC; recognized text goes to Luna when languages differ.
-**Microphone test → Open test** opens a separate quality test that never sends anything into your game.
+**Voice → Microphone test → Open test** opens a separate quality test that never sends anything into your game.
 Game integration and other hardware still need manual testing. See [voice status](VOICE.md).
 
 ChatShift uses GPT-5.6 Luna through the installed Codex app server and your own ChatGPT
@@ -80,33 +84,23 @@ Text use has been reported working in WoW and Valheim, and voice insertion was m
 tested in Valheim. Other configurations require individual testing. It translates your outgoing
 draft, not other players' messages. See [compatibility findings](COMPATIBILITY.md).
 
-## How it works
+## Use ChatShift
 
-1. Open ChatShift and choose **From** and **To** languages. Select your shortcut in the keyboard or mouse picture.
-2. Write your message in a supported chat field in your selected source language.
-3. Press your shortcut once, then release the keys. The default is **Right Ctrl + Enter**;
-   **Alt + Enter** also works with the default settings.
-4. Stay in the same field. ChatShift replaces the text with its translation. It sends Enter only when automatic sending is enabled.
+1. Choose **From** (your language) and **To** (the output language).
+2. Open **Text**, **Voice** or **Controller** to choose your buttons. Enable Text or
+   Voice in its own tab; both can stay on. Changes save automatically.
+3. Wait for green **READY**. For speech, also wait for **Voice ready** in Voice.
+4. Open a chat field. **Text:** write, press your shortcut once and release.
+   **Voice:** hold your shortcut, speak and release, or select the press-to-start/stop option.
+5. Stay in that field while ChatShift works. Read and send the result yourself,
+   or enable automatic sending in the corresponding tab.
 
-**Press once, then wait about 1–3 seconds.** This is an approximate range from limited
-local tests, not a measured average or a guarantee; it can take longer. Avoid typing or
-pressing the shortcut or Enter again while waiting. Pressing Enter can send the original
-message before translation finishes.
+Short typed messages took about 1–3 seconds in limited local tests. Voice may take
+longer. This is not a guaranteed timing. Do not type or press Enter while waiting.
 
-Open ChatShift from the taskbar to change either language or turn off automatic
-sending to review the translation first. Existing settings default to Norwegian input. Preferences
-are saved automatically. The app starts ready in the background after warming up.
-
-The keyboard picture highlights your saved shortcut.
-Left-click a supported key or mouse button in the picture to save it immediately. Click
-the selected button again to remove it. To select
-a combination, hold the right mouse button, left-click the desired keys, then release
-the right mouse button to save. Right mouse is only a selection gesture, not part of the
-saved shortcut. **How to set up** explains the gestures, and **Cancel selection** discards
-unfinished selections. Click the mouse picture to assign wheel click or either standard
-side button. Number-pad shortcuts require Num Lock on. Dimmed keys are unavailable.
-Left and right modifier keys are distinguished, as are Enter and Num Enter. Your saved
-combination replaces both default shortcuts. Removing the last button disables the shortcut.
+**Run in background** hides the window; **Pause** stops shortcuts; closing exits.
+For picture selection, combinations and first-use checks, see the [Quick start](GET_STARTED.md).
+For rear-button mapping and gamepad limits, see [Controllers](CONTROLLERS.md).
 
 ## Install
 
@@ -188,8 +182,10 @@ Optional live tests use your Codex allowance and a disposable text field:
 ./.venv/Scripts/python.exe -X utf8 "norsk engelsk/tests/smoke_desktop.py" --codex --right-ctrl
 ```
 
-The visual preview script needs Pillow (`pip install -r requirements-dev.txt`). Pillow is
-not needed for the standard clipboard adapter; the optional OCR adapter does require it. A Windows CI workflow runs only offline tests.
+The standard installer includes Pillow for smooth controller rendering. Development
+dependencies are in `requirements-dev.txt`. Windows CI runs the offline tests and a
+separate installation check that downloads and loads the speech model. These checks
+do not replace physical controller and in-game testing.
 
 The old local translator and API client are retained as experimental alternatives, but are
 not used by the app. The optional local model has separate attribution in

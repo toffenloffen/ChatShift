@@ -37,32 +37,9 @@ Windows is the current test platform; SteamOS microphone and game integration ar
 - Show clear recording, processing and ready states; bound recording duration and stop on cancellation.
 - No API credentials in source, logs or shared settings. No audio recording before an explicit user action.
 
-## Access investigation (24 September 2026)
+## Testing and remaining limits
 
-The installed Codex app-server schema accepts local audio inputs, but a synthetic English
-audio probe sent to the existing Luna text backend returned that it could not transcribe
-the audio. This is not evidence that every OpenAI model lacks audio support.
-
-The app-server's realtime connection was also tested using synthetic audio only.
-Both the default connection and V3 audio mode returned `realtime conversation requires API key auth`.
-V3 with text output instead returned `text realtime output modality requires realtime v2`.
-No user's microphone was recorded; no playback or game input was used.
-
-The documented desktop dictation feature inserts speech into the desktop app's own composer.
-An external-app dictation interface using the existing ChatGPT sign-in has not been established.
-
-- [Desktop dictation documentation](https://learn.chatgpt.com/docs/prompting)
-- [App-server integration](https://learn.chatgpt.com/docs/app-server)
-- [OpenAI speech-to-text API](https://developers.openai.com/api/docs/guides/speech-to-text)
-
-The user initially declined a local speech recognizer, then explicitly authorized
-trying one. Local transcription is now the chosen experiment; Luna still uses the
-existing account. Separate paid speech API use has not been agreed.
-
-## Still required for a working release
-
-The user accepted local recognition after testing real Norwegian dialect and gaming terms in
-the quality-test window. Synthetic speech and silence were also tested. Automated delivery tests
+Norwegian dialect and gaming terms have been tried in the quality-test window. Synthetic speech and silence were also tested. Automated delivery tests
 cover default review mode, explicit auto-send, cancellation, changed input, focus changes and
 failed readback; recorder tests cover length limits, overflow and device cleanup.
 Hold/toggle lifecycle and clickable voice bindings passed a mocked hidden-window UI check.

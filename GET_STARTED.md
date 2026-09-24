@@ -32,8 +32,8 @@ Keep the extracted folder: the desktop shortcut needs it.
 
 Wait for the top-right badge to turn green and show **READY**. The translator is connected.
 
-Choose **From** and **To**. These apply to both text and voice. Enable **Text translation**,
-**Voice input**, or both. Select a shortcut in each mode's tab:
+Choose **From** and **To**. These apply to both text and voice. Open **Text → Enable text translation** or **Voice → Enable voice input**.
+Both can stay enabled. Select a shortcut in the matching tab:
 
 - **One button:** left-click it in the keyboard or mouse picture.
 - **A combination:** hold the right mouse button. Left-click the pictured buttons,
@@ -57,8 +57,12 @@ Wait for the result. Stay in the same field and avoid typing or pressing Enter w
 waiting. Short typed messages took roughly 1–3 seconds in limited local tests. Voice
 may take longer. These are not guaranteed timings.
 
-Read the result and send it yourself, or enable automatic sending separately for text
-and voice. AI can misunderstand words, dialect and meaning.
+Read the result and send it yourself, or enable **Send automatically after translating**
+in Text or **Send voice messages automatically** in Voice. These settings are independent. AI can misunderstand words, dialect and meaning.
+
+Using a gamepad? Open **Controller** for its clickable diagram and see the
+[controller guide](CONTROLLERS.md), including rear-button mapping. Status and Pause
+stay visible at the bottom while you browse settings.
 
 Want to test the microphone first? Open **Voice → Microphone test → Open test**.
 Record a short sentence. The test shows the result without writing into your game.

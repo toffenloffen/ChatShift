@@ -40,8 +40,9 @@ Do not expect installing the Python dependencies alone to make the app run on Li
 Write in the original game's chat field, trigger one customizable shortcut, translate,
 verify replacement and optionally send. No separate composer. Keep model requests bounded,
 do not store chat messages or credentials in the repository, and stop on ambiguous capture
-or focus changes. The current source-language prompt is Norwegian; selectable source
-languages remain future work.
+or focus changes. The Windows version already passes the selected source and target languages to the
+translator and the source language to local speech recognition. Preserve these choices
+in the SteamOS implementation.
 
 See `COMPATIBILITY.md` for observed Windows results and limitations. This document is a
 development checklist, not a claim that SteamOS support already works.

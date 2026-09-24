@@ -28,8 +28,19 @@ a keyboard shortcut, then select that shortcut in ChatShift's Text or Voice tab.
 The controller picture includes **L4/L5** on the left and **R4/R5** on the right.
 These are illustrative rear-button positions alongside the front view. Clicking one opens
 mapping guidance and your current keyboard shortcut; it does not assign a native paddle
-or configure Steam automatically. **Front + shoulders** returns to direct button selection.
+or configure Steam automatically.
 Do not assume a rear paddle is independent if it duplicates a normal game button.
+
+### Example: a rear button as a keyboard shortcut
+
+You could map **R4 → F11** in Steam Input and choose **F11** in ChatShift's Voice tab.
+For hold-to-talk, the mapping must hold F11 while R4 is held and release it when R4
+is released. This is an example, not a default mapping; use a key that your game does
+not need. The same approach works for a text shortcut.
+
+ChatShift does not currently combine a native rear-button signal with another gamepad
+button. For example, **R4 + X** requires a suitable mapping in your controller software.
+Support depends on the controller and its software. Start with a short test and automatic sending off.
 
 ## Sharing work with SteamOS
 
