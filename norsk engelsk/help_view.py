@@ -83,8 +83,8 @@ SECTIONS = {'Get started': ('Start here',
                'Open Controller and turn on Enable controller. Select Text or Voice, then click '
                'up to 3 buttons in the controller picture. Click again to remove. Changes save '
                'automatically. Text or Voice must also be enabled in its own tab.\n'
-               'FRONT shows the normal buttons. BACK shows R4, R5, L4 and L5, labelled by the '
-               'hand you use while holding the controller.\n'
+               'All buttons share one picture. L4 and L5 are on the left; R4 and R5 are on the '
+               'right, matching your hands while playing. These four controls represent rear buttons.\n'
                'Rear buttons need mapping to a keyboard shortcut in Steam Input or compatible '
                'controller software. Clicking a rear button explains the setup; it does not map '
                'the button for you. Controller buttons also reach the game, so choose an unused combination.'),

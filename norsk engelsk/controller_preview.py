@@ -7,7 +7,6 @@ class ControllerPreview(tk.Canvas):
         super().__init__(parent, width=700, height=310, bg='#0d1421', highlightthickness=0)
         self.on_pick = on_pick
         self.selection = set()
-        self.view = 'front'
         self.buttons = {}
         self.focus_index = 0
         self.configure(takefocus=True)
@@ -38,11 +37,6 @@ class ControllerPreview(tk.Canvas):
 
     def set_selection(self, names):
         self.selection = set(names)
-        self.draw()
-
-    def set_view(self, view):
-        self.view = view
-        self.focus_index = 0
         self.draw()
 
     def rounded(self, x1, y1, x2, y2, **options):
@@ -78,10 +72,9 @@ class ControllerPreview(tk.Canvas):
         self.create_line(423, 77, 485, 75, 528, 81, smooth=True, fill='#568b94', width=2)
         self.rounded(325, 86, 375, 112, fill='#171c2b', outline='#64758c')
         self.create_text(350, 99, text='CS', fill='#9feadd', font=('Segoe UI', 10, 'bold'))
-        if self.view == 'front':
-            self.create_oval(214, 146, 340, 259, fill='#202538', outline='#39435d')
-            self.create_oval(165, 91, 249, 175, fill='#151a29', outline='#586482', width=2)
-            self.create_oval(365, 166, 449, 250, fill='#151a29', outline='#586482', width=2)
+        self.create_oval(214, 146, 340, 259, fill='#202538', outline='#39435d')
+        self.create_oval(165, 91, 249, 175, fill='#151a29', outline='#586482', width=2)
+        self.create_oval(365, 166, 449, 250, fill='#151a29', outline='#586482', width=2)
         self.buttons = {
             'LT': (185, 20, 275, 46, 'LT', False), 'RT': (425, 20, 515, 46, 'RT', False),
             'LB': (175, 51, 280, 78, 'LB', False), 'RB': (420, 51, 525, 78, 'RB', False),
@@ -97,17 +90,15 @@ class ControllerPreview(tk.Canvas):
             'X': (455, 128, 491, 164, 'X', True),
             'B': (533, 128, 569, 164, 'B', True),
             'A': (494, 167, 530, 203, 'A', True)}
-        if self.view == 'back':
-            self.rounded(285, 122, 415, 207, fill='#222739', outline='#46516e', width=1)
-            self.create_text(350, 157, text='REAR VIEW', fill='#a6acc6', font=('Segoe UI', 10, 'bold'))
-            self.create_text(350, 180, text='via Steam Input', fill='#b69aff', font=('Segoe UI', 9))
-            self.create_text(226, 101, text='RIGHT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
-            self.create_text(474, 101, text='LEFT HAND', fill='#b69aff', font=('Segoe UI', 10, 'bold'))
-            self.buttons = {
-                'Rear R4 (right hand, upper)': (186, 118, 267, 157, 'R4', False),
-                'Rear R5 (right hand, lower)': (186, 176, 267, 215, 'R5', False),
-                'Rear L4 (left hand, upper)': (433, 118, 514, 157, 'L4', False),
-                'Rear L5 (left hand, lower)': (433, 176, 514, 215, 'L5', False)}
+        self.buttons.update({
+            'Rear L4 (left hand, upper)': (18, 118, 92, 157, 'L4', False),
+            'Rear L5 (left hand, lower)': (18, 176, 92, 215, 'L5', False),
+            'Rear R4 (right hand, upper)': (608, 118, 682, 157, 'R4', False),
+            'Rear R5 (right hand, lower)': (608, 176, 682, 215, 'R5', False)})
+        for x, title in ((55, 'LEFT HAND'), (645, 'RIGHT HAND')):
+            self.create_text(x, 90, text=title, fill='#a6acc6', font=('Segoe UI', 9, 'bold'))
+            self.create_text(x, 239, text='Rear buttons', fill='#a6acc6', font=('Segoe UI', 8))
+            self.create_text(x, 255, text='Click to set up', fill='#b69aff', font=('Segoe UI', 8))
         face_colors = {'A': '#80dc9b', 'B': '#ff969f', 'X': '#8cc9ff', 'Y': '#ffe193'}
         for index, (name, (x1, y1, x2, y2, label, round_button)) in enumerate(self.buttons.items()):
             tag = 'button_' + str(index)
@@ -124,8 +115,7 @@ class ControllerPreview(tk.Canvas):
             self.create_text((x1+x2)/2, (y1+y2)/2, text=label,
                              fill='#10111b' if selected else face_colors.get(name, '#e2e7fa'),
                              font=('Segoe UI', 10, 'bold'), tags=tag)
-        self.create_text(350, 294, text=('Rear view · Left / right refer to your hands while playing (mirrored here)'
-                         if self.view == 'back' else 'LS / RS = press the stick · Click buttons to combine them'),
+        self.create_text(350, 294, text='LS / RS = press the stick · Rear buttons need Steam Input setup',
                          fill='#a6acc6', font=('Segoe UI', 9))
         from canvas_render import render
         self.rendered = render(self, 700, 310)

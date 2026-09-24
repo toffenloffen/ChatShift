@@ -67,16 +67,6 @@ class ControllerInput:
             button.pack(side='left', expand=True, fill='x', padx=3)
             self.mode_buttons[mode] = button
         self.preview = ControllerPreview(parent, self.pick_button)
-        views = tk.Frame(parent, bg=bg)
-        views.pack(pady=(10, 0))
-        self.view_buttons = {}
-        for view, title in (('front', 'FRONT  ·  Buttons & triggers'), ('back', 'BACK  ·  R4 / R5 / L4 / L5')):
-            button = tk.Button(views, text=title, relief='flat', bd=0, padx=24, pady=12,
-                               cursor='hand2', font=('Segoe UI', 10, 'bold'),
-                               command=lambda v=view: self.choose_view(v))
-            button.pack(side='left', padx=4)
-            self.view_buttons[view] = button
-        self.choose_view('front')
         self.preview.pack(pady=10)
         self.selection_label = tk.StringVar()
         row = tk.Frame(parent, bg=bg)
@@ -105,13 +95,6 @@ class ControllerInput:
             self.details.pack_forget()
         else:
             self.details.pack(fill='x', pady=6)
-
-    def choose_view(self, view):
-        self.preview.set_view(view)
-        for name, button in self.view_buttons.items():
-            button.configure(bg='#173b32' if name == view else '#252a3e',
-                             fg='#78f5b0' if name == view else '#a6acc6',
-                             activebackground='#245743', activeforeground='#ffffff')
 
     def choose_mode(self, mode):
         self.mode.set(mode)

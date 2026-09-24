@@ -25,7 +25,8 @@ is not a shortcut. Controller button names follow Xbox labels.
 **Rear paddles and Steam Deck back buttons:** Windows XInput does not expose them as
 separate buttons here. Use supported controller software or Steam Input to map them to
 a keyboard shortcut, then select that shortcut in ChatShift's Text or Voice tab.
-The **Rear paddles** picture shows four illustrative positions. Clicking one opens
+The controller picture includes **L4/L5** on the left and **R4/R5** on the right.
+These are illustrative rear-button positions alongside the front view. Clicking one opens
 mapping guidance and your current keyboard shortcut; it does not assign a native paddle
 or configure Steam automatically. **Front + shoulders** returns to direct button selection.
 Do not assume a rear paddle is independent if it duplicates a normal game button.

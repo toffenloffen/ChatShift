@@ -124,7 +124,12 @@ class ControllerDispatchTests(unittest.TestCase):
         self.assertEqual(self.controller.preview.selection, {'RB'})
         self.controller.clear_binding()
         self.assertEqual(self.controller.bindings['Voice'], [])
-        self.controller.preview.set_view('back')
-        self.assertEqual(len(self.controller.preview.buttons), 4)
-        self.controller.preview.set_view('front')
-        self.assertEqual(set(self.controller.preview.buttons), set(__import__('controller_input').BUTTONS))
+        buttons = self.controller.preview.buttons
+        front = {name for name in buttons if not name.startswith('Rear ')}
+        self.assertEqual(front, set(__import__('controller_input').BUTTONS))
+        rear = {name for name in buttons if name.startswith('Rear ')}
+        self.assertEqual(len(rear), 4)
+        with patch.object(self.controller, 'show_paddle_setup') as setup:
+            self.controller.pick_button('Rear R5 (right hand, lower)')
+            setup.assert_called_once()
+        self.assertEqual(self.controller.bindings['Voice'], [])
