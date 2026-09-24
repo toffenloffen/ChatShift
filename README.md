@@ -212,7 +212,10 @@ Keep the creator credit and do not claim you created ChatShift. This license doe
 not permit modification, redistribution, resale or paid access without separate
 written permission from toffenloffen. Sharing the official project link, reviews,
 demonstrations, and using ChatShift at work or in a monetized stream are allowed.
-GitHub's own viewing and forking rights still apply.
+Contribution forks, changes for proposed contributions and pull requests to
+the official project are welcome under the license's contribution exception.
+Contributors retain rights in their own work; submitting a pull request does
+not transfer ownership. GitHub's own viewing and forking rights still apply.
 
 This is a **source-available license, not an OSI open-source license**. The change
 does not revoke the MIT permissions on previously published versions or material;

@@ -16,8 +16,13 @@ under MIT may continue to be used under MIT, including commercially.
 You may use and run the Software free of charge, including at work or while
 streaming. You may download and make copies necessary to install, run and
 back up the Software for your own use. You may inspect the published source
-and submit feedback and bug reports. No permission to modify, redistribute,
-sublicense or publish derivative versions is granted by this license.
+and submit feedback and bug reports. You may fork and modify the source for
+the purpose of proposing contributions to the official ChatShift project,
+including publishing a contribution fork and submitting pull requests.
+Keep these terms and the original attribution with contribution forks and
+identify them as unofficial. This exception does not permit distributing
+independent products, installers or paid services. No other permission to
+modify, redistribute, sublicense or publish derivative versions is granted.
 Sharing links to the official project and publishing reviews or demonstrations
 of ordinary use is allowed. All other rights are reserved, subject to section 1
 and rights that cannot be restricted under applicable law. GitHub users retain
@@ -30,7 +35,12 @@ documentation must visibly credit "ChatShift created by toffenloffen" and
 link to https://github.com/toffenloffen/ChatShift where links are supported.
 Do not claim that you created the original ChatShift software or imply the
 creator's endorsement. This attribution requirement does not grant permission
-to redistribute or modify the Software.
+to redistribute or modify the Software beyond section 2.
+
+Contributors retain rights in their own original contributions. Submitting
+a pull request does not transfer ownership to toffenloffen. Any additional
+rights needed to incorporate or commercially distribute a contribution must
+be agreed with its rights holder before acceptance.
 
 4. No sale or paid redistribution
 Except where an earlier or third-party license independently grants that
