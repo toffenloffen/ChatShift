@@ -14,10 +14,11 @@ enable automatic sending. No separate translation window during normal use.
 **New here? Follow the [Quick start guide](GET_STARTED.md)** for installation,
 text and voice setup, shortcuts and your first message.
 
-**[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip)**
-
-Extract the ZIP, open **Install ChatShift.cmd**, and wait for setup to finish.
-[Release notes and checksums](https://github.com/toffenloffen/ChatShift/releases/latest).
+**Windows installer:** `ChatShift-Setup.exe` is being reviewed before publication.
+The new installer includes the runtime, text and voice dependencies; no Python or
+source folder is needed. Follow the [Quick start](GET_STARTED.md).
+[Published releases](https://github.com/toffenloffen/ChatShift/releases) may still
+contain the older source-based ZIP until the installer is approved.
 
 ## Choose your platform
 
@@ -60,8 +61,8 @@ limit is 1,000 characters per message; this is a game-chat tool, not a long-docu
 - **Microphone test:** inspect recognized speech and its translation without sending
   a message to a game.
 
-The Windows download packages this source and guided setup. It is not a standalone EXE;
-voice dependencies and the speech model are downloaded during installation.
+The new Windows Setup.exe installs ChatShift into your user account. Voice models
+are downloaded from the welcome window with progress and a retry option.
 
 ## Features
 
@@ -79,7 +80,7 @@ voice dependencies and the speech model are downloaded during installation.
   or voice, with live connection/button status. See [controller setup](CONTROLLERS.md).
 - Reuse recent identical translations to avoid unnecessary model requests.
 
-**Experimental local voice:** included by **Install ChatShift.cmd**. Enable **Voice input**.
+**Experimental local voice:** included by **ChatShift-Setup.exe**. Enable **Voice input**.
 In the Voice tab, click the pictured keys or mouse buttons to choose a voice shortcut.
 Choose **Hold to talk** or **Press to start · press again to stop**. Wait for voice to load,
 open your game's chat field, and speak using the shortcut. The language choices at the top
@@ -129,21 +130,14 @@ For rear-button mapping and gamepad limits, see [Controllers](CONTROLLERS.md).
 
 ## Install
 
-1. [Download ChatShift-Windows.zip](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip) and extract it to a permanent folder.
-2. Double-click **Install ChatShift.cmd**. It installs Python 3.13 if needed,
-   installs voice dependencies, downloads and checks Whisper small, and creates
-   a desktop shortcut. Follow any prompts and wait for **Setup complete**.
-3. Install Codex and sign in with your ChatGPT account, then open ChatShift from the desktop.
+Open **ChatShift-Setup.exe**, follow the installer, and choose **Prepare voice**
+in the welcome window. Install/open Codex and sign in with your own ChatGPT account.
+Open ChatShift from Start or the optional desktop shortcut. See [Quick start](GET_STARTED.md).
 
-Internet is required. Windows Package Manager installs Python if missing; if unavailable,
-install Python 3.13 from python.org with Tcl/Tk and the launcher, then rerun setup.
-The model download is several hundred MB. Setup errors stay visible and setup can be rerun.
-The original `setup.ps1` entry point now runs the same full setup.
-This is not a standalone EXE. Keep the extracted folder. Account/model access and
-usage limits apply. Other Windows configurations still need testing.
-
-For experimental Among Us support, also run `./setup_ocr.ps1` and restart ChatShift.
-Windows OCR support for Norwegian and English (United Kingdom) must be installed.
+The installer is currently a review artifact, not a published release. Developers
+can reproduce it with [Windows packaging instructions](packaging/README.md).
+The legacy CMD/Python scripts are development tools, not the consumer install path.
+Experimental Among Us OCR is a source-only feature and is not bundled in this installer.
 
 The standard clipboard adapter uses only the Python standard library. It does not need an API key or a
 downloaded local model. You must supply your own eligible ChatGPT/Codex account; this app

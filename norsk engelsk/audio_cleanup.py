@@ -66,6 +66,6 @@ def clean_audio(audio, enabled=False, strength=100, threshold=-50, apply_gate=Fa
         # accepts variable lengths; trimming an assumed delay risks losing words.
         return soxr.resample(filtered, processor.RATE, 16000).astype(np.float32)
     except (ImportError, OSError, RuntimeError) as exc:
-        raise ValueError('DeepFilterNet is unavailable. Run Install ChatShift.cmd or turn noise suppression off.') from exc
+        raise ValueError('DeepFilterNet is unavailable. Open ChatShift Setup from Start or turn noise suppression off.') from exc
     finally:
         processor.close()

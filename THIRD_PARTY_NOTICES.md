@@ -1,4 +1,13 @@
-# Optional components
+# Runtime components
+
+The Windows Setup.exe includes a separate Python runtime and native dependencies.
+Its `licenses` directory contains installed distribution licenses, metadata, a
+version inventory, Python's license, and source archives for soxr and PyAV.
+See `packaging/COMPONENTS.md` for replaceable-library instructions and the remaining
+FFmpeg source correspondence check required before public redistribution.
+Whisper small (OpenAI/SYSTRAN faster-whisper conversion, MIT) is downloaded on first
+setup from https://huggingface.co/Systran/faster-whisper-small. Its model card and
+license are available there. DeepFilterNet3 attribution follows below.
 
 Voice noise suppression now uses deepfilter-stream 0.1.0 (MIT) and its
 DeepFilterNet3 torchDF streaming ONNX export, dfn3-512-v1 (MIT/Apache-2.0;

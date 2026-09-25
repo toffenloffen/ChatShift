@@ -13,6 +13,7 @@ import direct_mode
 import among_us_mode
 from codex_translator import CodexTranslator
 from settings import LANGUAGES, load_settings, save_settings, SETTINGS_PATH
+from app_paths import DATA
 from shortcuts import binding_label, validate_binding, MODIFIER_NAMES, NUMPAD_ENTER
 from keyboard_preview import KeyboardPreview, MousePreview, ShortcutDraft, highlighted_keys
 from help_view import show_help
@@ -71,7 +72,7 @@ class App:
         self.preparation = queue.Queue()
         self.local = None
         self.closing = False
-        self.diagnostic_path = Path(__file__).resolve().parent / '.runtime' / 'status.json' if prepare else None
+        self.diagnostic_path = DATA / '.runtime' / 'status.json' if prepare else None
         self.last_diagnostic = 0
         self.status = tk.StringVar(value='Connecting and warming up your translator…')
         self.badge = tk.StringVar(value='CONNECTING')

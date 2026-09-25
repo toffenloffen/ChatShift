@@ -10,23 +10,30 @@ Using a controller? See [controller setup](CONTROLLERS.md).
 
 ## 1. Install
 
-1. [Download ChatShift-Windows.zip](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip) and choose **Extract all**. Keep the extracted folder in a permanent location.
-2. Double-click **Install ChatShift.cmd**. Follow any installer prompts.
-   It installs Python 3.13 if needed through Windows Package Manager, installs voice
-   dependencies, downloads and checks Whisper small and DeepFilterNet3, and creates a desktop shortcut.
-   Internet is required. The model is several hundred MB; setup may take several minutes.
-   Wait for **Setup complete**. No microphone recording is made during setup.
-3. Install [Codex](https://learn.chatgpt.com/docs/windows/windows-app), open it,
-   and sign in with your ChatGPT account. No prompt or API key is needed.
-   Your account must have access to the model ChatShift uses; usage limits apply.
-4. Open **ChatShift** from the desktop. Enable voice in the app if you want to use it.
+The new installer is under review and has not been published yet. Use the
+**ChatShift-Setup.exe** artifact supplied for review; the existing published ZIP
+is the older developer package.
 
-If setup fails, the window stays open with the error. Fix it and run the same file again.
-If Windows Package Manager is unavailable, install Python 3.13 from python.org with
-Tcl/Tk and the Python launcher, then rerun setup. Follow your organization's security policy.
+1. Double-click **ChatShift-Setup.exe** and follow the Windows installer. It installs
+   only for your Windows account, with a Start Menu entry and optional desktop shortcut.
+   You do not need to install Python, extract a ZIP or keep a source folder.
+2. Choose **Prepare voice** in the welcome window. Internet is required for the
+   Whisper small and DeepFilterNet3 models (about 500 MB). Progress shows the current
+   step; downloads can take several minutes. Setup does not record the microphone.
+3. Use **Open official Codex setup** to install/open Codex and sign in with your
+   own ChatGPT account. ChatShift cannot authenticate you. Your account needs Codex
+   access; account usage limits apply. No API key or prompt is needed.
+4. Open **ChatShift** from Start, choose your languages, and enable text or voice.
 
-This is a guided setup, not a standalone EXE. Codex sign-in is still your own step.
-Keep the extracted folder: the desktop shortcut needs it.
+If a download fails, check internet access and free disk space, then choose **Retry**.
+The error window gives the location of a diagnostic log. **ChatShift Setup** in Start
+reopens model preparation. You can continue with text while postponing voice setup.
+
+Updates use the same installer. Close ChatShift first. Settings and model downloads
+live in `%LOCALAPPDATA%/ChatShift`, separately from program files, and are preserved
+by updates and uninstall. Remove ChatShift through Windows Settings → Apps.
+An older source-folder installation is left untouched; its preferences are not
+silently copied. Keep using that version until you have finished reviewing the new one.
 
 ## 2. Choose your languages and buttons
 

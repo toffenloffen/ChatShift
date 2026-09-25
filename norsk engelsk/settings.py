@@ -7,7 +7,8 @@ LANGUAGES = ('English', 'Arabic', 'Chinese (Simplified)', 'Czech', 'Danish', 'Du
              'Finnish', 'French', 'German', 'Greek', 'Hindi', 'Hungarian', 'Italian',
              'Japanese', 'Korean', 'Norwegian', 'Polish', 'Portuguese', 'Romanian',
              'Russian', 'Spanish', 'Swedish', 'Thai', 'Turkish', 'Ukrainian', 'Vietnamese')
-SETTINGS_PATH = Path(__file__).resolve().parent / '.settings.json'
+from app_paths import DATA
+SETTINGS_PATH = DATA / '.settings.json'
 
 
 def load_settings(path=SETTINGS_PATH):

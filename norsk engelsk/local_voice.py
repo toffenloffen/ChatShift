@@ -10,7 +10,8 @@ LANGUAGE_CODES = dict(zip(
      'Russian', 'Spanish', 'Swedish', 'Thai', 'Turkish', 'Ukrainian', 'Vietnamese'),
     ('en','ar','zh','cs','da','nl','fi','fr','de','el','hi','hu','it','ja','ko',
      'no','pl','pt','ro','ru','es','sv','th','tr','uk','vi')))
-MODEL_DIRECTORY = Path(__file__).resolve().parents[1] / '.models' / 'voice'
+from app_paths import MODELS
+MODEL_DIRECTORY = MODELS / 'voice'
 
 
 class LocalTranscriber:

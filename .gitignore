@@ -9,3 +9,8 @@ __pycache__/
 .controller.json
 .controller.tmp
 *.log
+.build-env/
+.build-tools/
+build/
+dist/
+ChatShift.spec

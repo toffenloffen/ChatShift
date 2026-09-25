@@ -1,0 +1,31 @@
+name: Windows installer review artifact
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/windows-setup]
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+      - run: python -m pip install -r packaging/requirements-build.txt
+      - run: python packaging/test_suite.py
+      - run: python packaging/fetch_sources.py
+      - run: python packaging/build_windows.py
+      - name: Isolated installer verification
+        shell: pwsh
+        run: |
+          & 'C:/Program Files (x86)/Inno Setup 6/ISCC.exe' /DAppIdValue=ChatShift.IsolatedInstallerTest /FChatShift-Test-Setup packaging/ChatShift.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Test installer compilation failed' }
+          ./packaging/test_installer.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChatShift-Windows-review
+          path: |
+            dist/ChatShift-Setup.exe
+            build/installer-verification/result.json
+          if-no-files-found: error

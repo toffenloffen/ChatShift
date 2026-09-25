@@ -5,12 +5,13 @@ import tkinter as tk
 from tkinter import ttk
 import windows_input as win
 from controller_input import BUTTONS, XInput, ChordEdges, validate_chord
+from app_paths import DATA
 
 
 class ControllerInput:
     def __init__(self, app, persist=True):
         self.app = app
-        self.path = Path(__file__).with_name('.controller.json') if persist else None
+        self.path = DATA / '.controller.json' if persist else None
         saved = {}
         if self.path:
             try:

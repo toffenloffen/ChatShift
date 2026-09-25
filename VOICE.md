@@ -13,7 +13,7 @@ names too. Recognition quality still needs testing with your voice and game audi
 Focus changes, other input, pause or closing cancel pending delivery. The recorder has a 30-second limit.
 Automatic sending requires a verified readback and never sends on a failed verification.
 
-The Voice tab also offers **Speech and translation test → Test translation**. Run **Install ChatShift.cmd** first. Setup installs dependencies and downloads
+The Voice tab also offers **Speech and translation test → Test translation**. Run **ChatShift Setup** from Start first. The installer includes dependencies; setup downloads
 the multilingual Whisper small model; it loads on first use and runs
 on the CPU with four threads; no NVIDIA GPU or speech API key is required.
 Recordings begin only after clicking Start recording, stop after at most 30 seconds,
