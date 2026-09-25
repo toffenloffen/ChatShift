@@ -25,6 +25,10 @@ foreach ($phase in @('install','update')) {
     if ($shell.CreateShortcut($shortcut).TargetPath -ne (Join-Path $installRoot 'ChatShift.exe')) { throw 'Incorrect shortcut target' }
     $process = Start-Process -FilePath (Join-Path $installRoot 'ChatShift.exe') -ArgumentList '--self-test' -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw 'Installed executable self-test failed' }
+    if ($phase -eq 'install') {
+        $process = Start-Process -FilePath (Join-Path $installRoot 'ChatShift.exe') -ArgumentList '--test-models' -WindowStyle Hidden -Wait -PassThru
+        if ($process.ExitCode -ne 0) { throw 'Installed model download/load test failed' }
+    }
     if ((Get-FileHash $sentinel).Hash -ne $before) { throw 'Settings changed during install/update' }
 }
 $uninstaller = Join-Path $installRoot 'unins000.exe'
@@ -38,5 +42,6 @@ if (Test-Path $registry) { throw 'Uninstall registration remained' }
 if (Test-Path (Join-Path $installRoot 'ChatShift.exe')) { throw 'Installed application remained' }
 if (Test-Path $shortcut) { throw 'Start Menu shortcut remained' }
 if ((Get-FileHash $sentinel).Hash -ne $before) { throw 'Uninstall changed settings' }
-@{ install='passed'; update='passed'; uninstall='passed'; shortcuts='passed'; settings='preserved'; self_test='passed' } | ConvertTo-Json | Set-Content (Join-Path $testRoot 'result.json')
+if (-not (Test-Path (Join-Path $dataRoot 'setup-complete.json'))) { throw 'Uninstall removed model preparation state' }
+@{ install='passed'; update='passed'; uninstall='passed'; shortcuts='passed'; settings='preserved'; self_test='passed'; models='downloaded and loaded' } | ConvertTo-Json | Set-Content (Join-Path $testRoot 'result.json')
 Get-Content (Join-Path $testRoot 'result.json')

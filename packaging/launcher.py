@@ -12,6 +12,10 @@ from tkinter import ttk, messagebox
 import webbrowser
 from app_paths import DATA, MODELS
 
+# Public model downloads use ChatShift's cache and never inherit a saved Hub token.
+os.environ['HF_HOME'] = str(MODELS / 'huggingface')
+os.environ['HF_HUB_DISABLE_IMPLICIT_TOKEN'] = '1'
+
 
 def prepare_models(report):
     # Use a dedicated cache, never the developer's or another application's cache.
