@@ -1,9 +1,12 @@
+param([switch]$Production)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $testRoot = [IO.Path]::GetFullPath((Join-Path $root 'build/installer-verification'))
 $installRoot = Join-Path $testRoot 'program'
 $dataRoot = Join-Path $testRoot 'data'
-$registry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ChatShift.IsolatedInstallerTest_is1'
+$appId = if ($Production) { 'ChatShift.Windows' } else { 'ChatShift.IsolatedInstallerTest' }
+$groupName = if ($Production) { 'ChatShift' } else { 'ChatShiftInstallerVerification' }
+$registry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\' + $appId + '_is1'
 if (Test-Path $registry) { throw 'An isolated installer test is already registered. Inspect it before continuing.' }
 New-Item -ItemType Directory -Force $dataRoot | Out-Null
 $env:CHATSHIFT_DATA_DIR = $dataRoot
@@ -17,7 +20,8 @@ $fixture = Join-Path $testRoot 'speech-fixture.wav'
 $speaker.SetOutputToWaveFile($fixture)
 $speaker.Speak('Hello my friend. Can you help me with this quest?')
 $speaker.Dispose()
-$setup = Join-Path $root 'dist/ChatShift-Test-Setup.exe'
+$setupName = if ($Production) { 'ChatShift-Setup.exe' } else { 'ChatShift-Test-Setup.exe' }
+$setup = Join-Path $root ('dist/' + $setupName)
 $arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="' + $installRoot + '"'),'/TASKS=')
 foreach ($phase in @('install','update')) {
     $process = Start-Process -FilePath $setup -ArgumentList ($arguments + ('/LOG="' + (Join-Path $testRoot ($phase + '.log')) + '"')) -WindowStyle Hidden -Wait -PassThru
@@ -26,7 +30,7 @@ foreach ($phase in @('install','update')) {
     $registered = (Get-ItemProperty $registry).InstallLocation.TrimEnd('\')
     if ($registered -ne $installRoot.Replace('/', '\')) { throw "Unexpected install location: $registered" }
     $programs = [Environment]::GetFolderPath('Programs')
-    $shortcut = Join-Path $programs 'ChatShiftInstallerVerification/ChatShift.lnk'
+    $shortcut = Join-Path $programs ($groupName + '/ChatShift.lnk')
     if (-not (Test-Path $shortcut)) { throw 'Missing Start Menu shortcut' }
     $shell = New-Object -ComObject WScript.Shell
     if ($shell.CreateShortcut($shortcut).TargetPath -ne (Join-Path $installRoot 'ChatShift.exe')) { throw 'Incorrect shortcut target' }

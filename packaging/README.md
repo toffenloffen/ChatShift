@@ -40,6 +40,11 @@ EXE self-test and retention of data outside program files. Inspect the welcome G
 The offline suite uses its own actual Windows mutex so the running app is unaffected.
 Do not run the regular test suite against an actively used chat field.
 
+The CI workflow uses `test_installer.ps1 -Production` only inside its disposable
+Windows VM to verify the exact `ChatShift-Setup.exe` offered for review. It also
+downloads both models and transcribes a locally synthesized PCM test sentence.
+Use the default isolated identity when testing on a personal development PC.
+
 Settings and model caches live in `%LOCALAPPDATA%/ChatShift`, and uninstall deliberately
 leaves them intact. Source-install settings remain where they were; no private data
 is searched for or copied. To migrate preferences deliberately, close both versions

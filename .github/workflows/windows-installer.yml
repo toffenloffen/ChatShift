@@ -19,9 +19,8 @@ jobs:
       - name: Isolated installer verification
         shell: pwsh
         run: |
-          & 'C:/Program Files (x86)/Inno Setup 6/ISCC.exe' /DAppIdValue=ChatShift.IsolatedInstallerTest /DGroupNameValue=ChatShiftInstallerVerification /FChatShift-Test-Setup packaging/ChatShift.iss
-          if ($LASTEXITCODE -ne 0) { throw 'Test installer compilation failed' }
-          ./packaging/test_installer.ps1
+          # This disposable VM has no user's installation. Test the exact delivered EXE.
+          ./packaging/test_installer.ps1 -Production
       - uses: actions/upload-artifact@v4
         if: always()
         with:
