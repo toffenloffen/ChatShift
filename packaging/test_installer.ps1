@@ -11,7 +11,7 @@ $sentinel = Join-Path $dataRoot '.settings.json'
 '{"source_language":"Norwegian","target_language":"English"}' | Set-Content $sentinel
 $before = (Get-FileHash $sentinel).Hash
 $setup = Join-Path $root 'dist/ChatShift-Test-Setup.exe'
-$arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="' + $installRoot + '"'),'/GROUP="ChatShift Installer Verification"','/TASKS=')
+$arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="' + $installRoot + '"'),'/TASKS=')
 foreach ($phase in @('install','update')) {
     $process = Start-Process -FilePath $setup -ArgumentList ($arguments + ('/LOG="' + (Join-Path $testRoot ($phase + '.log')) + '"')) -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw "$phase failed: $($process.ExitCode)" }
@@ -19,7 +19,7 @@ foreach ($phase in @('install','update')) {
     $registered = (Get-ItemProperty $registry).InstallLocation.TrimEnd('\')
     if ($registered -ne $installRoot.Replace('/', '\')) { throw "Unexpected install location: $registered" }
     $programs = [Environment]::GetFolderPath('Programs')
-    $shortcut = Join-Path $programs 'ChatShift Installer Verification/ChatShift.lnk'
+    $shortcut = Join-Path $programs 'ChatShiftInstallerVerification/ChatShift.lnk'
     if (-not (Test-Path $shortcut)) { throw 'Missing Start Menu shortcut' }
     $shell = New-Object -ComObject WScript.Shell
     if ($shell.CreateShortcut($shortcut).TargetPath -ne (Join-Path $installRoot 'ChatShift.exe')) { throw 'Incorrect shortcut target' }

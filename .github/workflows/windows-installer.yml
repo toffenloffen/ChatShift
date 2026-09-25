@@ -19,13 +19,16 @@ jobs:
       - name: Isolated installer verification
         shell: pwsh
         run: |
-          & 'C:/Program Files (x86)/Inno Setup 6/ISCC.exe' /DAppIdValue=ChatShift.IsolatedInstallerTest /FChatShift-Test-Setup packaging/ChatShift.iss
+          & 'C:/Program Files (x86)/Inno Setup 6/ISCC.exe' /DAppIdValue=ChatShift.IsolatedInstallerTest /DGroupNameValue=ChatShiftInstallerVerification /FChatShift-Test-Setup packaging/ChatShift.iss
           if ($LASTEXITCODE -ne 0) { throw 'Test installer compilation failed' }
           ./packaging/test_installer.ps1
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: ChatShift-Windows-review
           path: |
             dist/ChatShift-Setup.exe
             build/installer-verification/result.json
+            build/installer-verification/*.log
+            build/installer-verification/data/*.log
           if-no-files-found: error

@@ -1,13 +1,16 @@
 #ifndef AppIdValue
   #define AppIdValue "ChatShift.Windows"
 #endif
+#ifndef GroupNameValue
+  #define GroupNameValue "ChatShift"
+#endif
 [Setup]
 AppId={#AppIdValue}
 AppName=ChatShift
 AppVersion=0.2.0
 AppPublisher=toffenloffen
 DefaultDirName={localappdata}\Programs\ChatShift
-DefaultGroupName=ChatShift
+DefaultGroupName={#GroupNameValue}
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -28,9 +31,9 @@ Name: desktopicon; Description: "Create a desktop shortcut"; Flags: unchecked
 [Files]
 Source: "..\dist\ChatShift\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
-Name: "{group}\ChatShift"; Filename: "{app}\ChatShift.exe"
-Name: "{group}\ChatShift Setup"; Filename: "{app}\ChatShift.exe"; Parameters: "--setup"
-Name: "{group}\Uninstall ChatShift"; Filename: "{uninstallexe}"
+Name: "{userprograms}\{#GroupNameValue}\ChatShift"; Filename: "{app}\ChatShift.exe"
+Name: "{userprograms}\{#GroupNameValue}\ChatShift Setup"; Filename: "{app}\ChatShift.exe"; Parameters: "--setup"
+Name: "{userprograms}\{#GroupNameValue}\Uninstall ChatShift"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\ChatShift"; Filename: "{app}\ChatShift.exe"; Tasks: desktopicon
 [Run]
 Filename: "{app}\ChatShift.exe"; Description: "Open ChatShift and prepare voice"; Flags: nowait postinstall skipifsilent

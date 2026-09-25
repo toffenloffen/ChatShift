@@ -23,7 +23,7 @@ For an isolated test while another ChatShift is running, compile the same payloa
 with a distinct registration ID and output filename:
 
 ```powershell
-ISCC.exe /DAppIdValue=ChatShift.IsolatedInstallerTest /FChatShift-Test-Setup packaging/ChatShift.iss
+ISCC.exe /DAppIdValue=ChatShift.IsolatedInstallerTest /DGroupNameValue=ChatShiftInstallerVerification /FChatShift-Test-Setup packaging/ChatShift.iss
 ```
 
 Install that test EXE with `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOICONS`
