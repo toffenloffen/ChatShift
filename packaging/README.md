@@ -9,6 +9,7 @@ the developer source tree into the product. No code signing certificate is confi
 python -m venv .build-env
 .build-env/Scripts/python.exe -m pip install -r packaging/requirements-build.txt
 .build-env/Scripts/python.exe packaging/fetch_sources.py
+.build-env/Scripts/python.exe packaging/fetch_native_sources.py
 .build-env/Scripts/python.exe packaging/build_windows.py
 .build-env/Scripts/python.exe packaging/test_suite.py
 ```

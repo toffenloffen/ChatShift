@@ -15,6 +15,7 @@ jobs:
       - run: python -m pip install -r packaging/requirements-build.txt
       - run: python packaging/test_suite.py
       - run: python packaging/fetch_sources.py
+      - run: python packaging/fetch_native_sources.py
       - run: python packaging/build_windows.py
       - name: Isolated installer verification
         shell: pwsh
