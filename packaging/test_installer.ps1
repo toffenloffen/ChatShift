@@ -10,6 +10,13 @@ $env:CHATSHIFT_DATA_DIR = $dataRoot
 $sentinel = Join-Path $dataRoot '.settings.json'
 '{"source_language":"Norwegian","target_language":"English"}' | Set-Content $sentinel
 $before = (Get-FileHash $sentinel).Hash
+# Synthesize a public test phrase locally; never record the user's microphone.
+Add-Type -AssemblyName System.Speech
+$speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$fixture = Join-Path $testRoot 'speech-fixture.wav'
+$speaker.SetOutputToWaveFile($fixture)
+$speaker.Speak('Hello my friend. Can you help me with this quest?')
+$speaker.Dispose()
 $setup = Join-Path $root 'dist/ChatShift-Test-Setup.exe'
 $arguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/DIR="' + $installRoot + '"'),'/TASKS=')
 foreach ($phase in @('install','update')) {
@@ -26,7 +33,7 @@ foreach ($phase in @('install','update')) {
     $process = Start-Process -FilePath (Join-Path $installRoot 'ChatShift.exe') -ArgumentList '--self-test' -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw 'Installed executable self-test failed' }
     if ($phase -eq 'install') {
-        $process = Start-Process -FilePath (Join-Path $installRoot 'ChatShift.exe') -ArgumentList '--test-models' -WindowStyle Hidden -Wait -PassThru
+        $process = Start-Process -FilePath (Join-Path $installRoot 'ChatShift.exe') -ArgumentList @('--test-models','--speech-fixture',('"' + $fixture + '"')) -WindowStyle Hidden -Wait -PassThru
         if ($process.ExitCode -ne 0) { throw 'Installed model download/load test failed' }
     }
     if ((Get-FileHash $sentinel).Hash -ne $before) { throw 'Settings changed during install/update' }
@@ -43,5 +50,5 @@ if (Test-Path (Join-Path $installRoot 'ChatShift.exe')) { throw 'Installed appli
 if (Test-Path $shortcut) { throw 'Start Menu shortcut remained' }
 if ((Get-FileHash $sentinel).Hash -ne $before) { throw 'Uninstall changed settings' }
 if (-not (Test-Path (Join-Path $dataRoot 'setup-complete.json'))) { throw 'Uninstall removed model preparation state' }
-@{ install='passed'; update='passed'; uninstall='passed'; shortcuts='passed'; settings='preserved'; self_test='passed'; models='downloaded and loaded' } | ConvertTo-Json | Set-Content (Join-Path $testRoot 'result.json')
+@{ install='passed'; update='passed'; uninstall='passed'; shortcuts='passed'; settings='preserved'; self_test='passed'; models='downloaded and loaded'; pcm_transcription='passed' } | ConvertTo-Json | Set-Content (Join-Path $testRoot 'result.json')
 Get-Content (Join-Path $testRoot 'result.json')

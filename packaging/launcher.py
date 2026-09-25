@@ -40,7 +40,9 @@ def configure_filter():
 
 def self_test(models=False):
     """Packaging test: imports/resources only, no login, recording or global hooks."""
-    import PIL.Image, sounddevice, soxr, av, onnxruntime, ctranslate2, tokenizers
+    import PIL.Image, sounddevice, soxr, onnxruntime, ctranslate2, tokenizers
+    import importlib.util
+    assert importlib.util.find_spec('av') is None, 'PyAV must not be in the consumer payload'
     import faster_whisper, deepfilter_stream
     from settings import LANGUAGES
     from local_voice import LANGUAGE_CODES
@@ -49,6 +51,18 @@ def self_test(models=False):
     root = tk.Tk(); root.withdraw(); root.update(); root.destroy()
     if models:
         prepare_models(lambda text: None)
+        if '--speech-fixture' in sys.argv:
+            import wave
+            import numpy as np
+            from local_voice import LocalTranscriber
+            fixture = sys.argv[sys.argv.index('--speech-fixture') + 1]
+            with wave.open(fixture, 'rb') as source:
+                assert source.getsampwidth() == 2 and source.getnchannels() == 1
+                audio = np.frombuffer(source.readframes(source.getnframes()), dtype='<i2').astype(np.float32) / 32768
+                audio = soxr.resample(audio, source.getframerate(), 16000)
+            transcript = LocalTranscriber().transcribe(audio, 'English')
+            assert 'friend' in transcript.lower() and 'quest' in transcript.lower(), transcript
+            (DATA / 'transcription-test.json').write_text(json.dumps({'input': 'synthetic PCM speech array', 'text': transcript}), encoding='utf-8')
     (DATA / 'self-test.json').write_text(json.dumps({'ok': True, 'languages': 26, 'models': models}), encoding='utf-8')
 
 

@@ -9,7 +9,6 @@ the developer source tree into the product. No code signing certificate is confi
 python -m venv .build-env
 .build-env/Scripts/python.exe -m pip install -r packaging/requirements-build.txt
 .build-env/Scripts/python.exe packaging/fetch_sources.py
-.build-env/Scripts/python.exe packaging/fetch_native_sources.py
 .build-env/Scripts/python.exe packaging/build_windows.py
 .build-env/Scripts/python.exe packaging/test_suite.py
 ```
@@ -47,7 +46,8 @@ is searched for or copied. To migrate preferences deliberately, close both versi
 and copy only `.settings.json` and `.controller.json` into that data directory.
 
 Publication is a separate review step. Review `COMPONENTS.md`, exact dependency
-inventory and corresponding native-library sources before public redistribution.
+inventory, retained sources and the lazy file-decoder patch. The consumer package
+excludes PyAV/FFmpeg and tests actual NumPy PCM speech transcription without them.
 This branch does not publish, upload releases or change the existing release URL.
 GitHub Actions creates review artifacts on this branch; it does not publish a release.
 On the development PC, Windows application control blocked Inno Setup's temporary

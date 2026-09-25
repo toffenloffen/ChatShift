@@ -2,11 +2,11 @@
 
 The Windows Setup.exe includes a separate Python runtime and native dependencies.
 Its `licenses` directory contains installed distribution licenses, metadata, a
-version inventory, Python's license, and source archives for soxr, PyAV, FFmpeg
-and the FFmpeg build inputs with verified upstream SHA-256 hashes and patches.
-See `packaging/COMPONENTS.md` for replaceable-library instructions and the concrete
-x264/x265 licensing concern found in the upstream wheel. Review that dependency
-or build an LGPL-only replacement before public redistribution.
+version inventory, Python's license, and verified source archives for soxr and
+faster-whisper. A documented MIT-licensed faster-whisper patch defers its optional
+PyAV file decoder imports. ChatShift uses NumPy microphone arrays; its frozen
+consumer package excludes PyAV and FFmpeg entirely. See `packaging/COMPONENTS.md`
+for the exact modification, upstream source and replaceable-library instructions.
 Whisper small (OpenAI/SYSTRAN faster-whisper conversion, MIT) is downloaded on first
 setup from https://huggingface.co/Systran/faster-whisper-small. Its model card and
 license are available there. DeepFilterNet3 attribution follows below.
