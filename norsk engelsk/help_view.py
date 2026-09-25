@@ -5,7 +5,7 @@ import webbrowser
 
 SETUP_URL = 'https://learn.chatgpt.com/docs/windows/windows-app'
 SECTIONS = {'Get started': ('Start here',
-                 'Install ChatShift with ChatShift-Setup.exe, then choose Prepare voice in the '
+                 'Install ChatShift with ChatShift-Setup.exe, then choose Set up ChatShift in the '
                  'welcome window. To retry downloads later, open ChatShift Setup from the '
                  'Windows Start menu.\n\n'
                  '1. Install Codex using the link below.\n'

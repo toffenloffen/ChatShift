@@ -14,11 +14,10 @@ enable automatic sending. No separate translation window during normal use.
 **New here? Follow the [Quick start guide](GET_STARTED.md)** for installation,
 text and voice setup, shortcuts and your first message.
 
-**Windows installer:** `ChatShift-Setup.exe` is being reviewed before publication.
-The new installer includes the runtime, text and voice dependencies; no Python or
-source folder is needed. Follow the [Quick start](GET_STARTED.md).
-[Published releases](https://github.com/toffenloffen/ChatShift/releases) may still
-contain the older source-based ZIP until the installer is approved.
+**[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Setup.exe)**
+
+Open the downloaded file, install, and click **Set up ChatShift**. Text, voice and
+noise suppression are prepared together. Requires internet and your own ChatGPT/Codex account.
 
 ## Choose your platform
 
@@ -130,12 +129,11 @@ For rear-button mapping and gamepad limits, see [Controllers](CONTROLLERS.md).
 
 ## Install
 
-Open **ChatShift-Setup.exe**, follow the installer, and choose **Prepare voice**
+Open **ChatShift-Setup.exe**, follow the installer, and choose **Set up ChatShift**
 in the welcome window. Install/open Codex and sign in with your own ChatGPT account.
-Open ChatShift from Start or the optional desktop shortcut. See [Quick start](GET_STARTED.md).
+Open ChatShift from Start or the desktop shortcut. See [Quick start](GET_STARTED.md).
 
-The installer is currently a review artifact, not a published release. Developers
-can reproduce it with [Windows packaging instructions](packaging/README.md).
+Developers can reproduce the installer with [Windows packaging instructions](packaging/README.md).
 The legacy CMD/Python scripts are development tools, not the consumer install path.
 Experimental Among Us OCR is a source-only feature and is not bundled in this installer.
 

@@ -26,17 +26,15 @@ WizardStyle=modern
 CloseApplications=no
 RestartApplications=no
 DisableProgramGroupPage=yes
-[Tasks]
-Name: desktopicon; Description: "Create a desktop shortcut"; Flags: unchecked
 [Files]
 Source: "..\dist\ChatShift\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{userprograms}\{#GroupNameValue}\ChatShift"; Filename: "{app}\ChatShift.exe"
 Name: "{userprograms}\{#GroupNameValue}\ChatShift Setup"; Filename: "{app}\ChatShift.exe"; Parameters: "--setup"
 Name: "{userprograms}\{#GroupNameValue}\Uninstall ChatShift"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\ChatShift"; Filename: "{app}\ChatShift.exe"; Tasks: desktopicon
+Name: "{autodesktop}\ChatShift"; Filename: "{app}\ChatShift.exe"
 [Run]
-Filename: "{app}\ChatShift.exe"; Description: "Open ChatShift and prepare voice"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\ChatShift.exe"; Flags: nowait skipifsilent
 [Code]
 function InitializeSetup(): Boolean;
 begin

@@ -9,7 +9,6 @@ import threading
 import traceback
 import tkinter as tk
 from tkinter import ttk, messagebox
-import webbrowser
 from app_paths import DATA, MODELS
 
 # Public model downloads use ChatShift's cache and never inherit a saved Hub token.
@@ -20,11 +19,11 @@ os.environ['HF_HUB_DISABLE_IMPLICIT_TOKEN'] = '1'
 def prepare_models(report):
     # Use a dedicated cache, never the developer's or another application's cache.
     from deepfilter_stream import assets
-    report('1 of 2 · Downloading and verifying noise suppression…')
+    report('Step 1 of 2 · Getting noise suppression ready…')
     os.environ.pop('DEEPFILTER_STREAM_MODEL_DIR', None)
     paths = assets.ensure_assets(str(MODELS / 'deepfilter'))
     os.environ['DEEPFILTER_STREAM_MODEL_DIR'] = str(paths['onnx'].parent)
-    report('2 of 2 · Downloading and checking voice recognition (about 500 MB)…')
+    report('Step 2 of 2 · Getting voice ready… This may take a few minutes.')
     from local_voice import LocalTranscriber
     LocalTranscriber()
     from audio_cleanup import clean_audio
@@ -69,18 +68,15 @@ def self_test(models=False):
 def welcome():
     root = tk.Tk()
     root.title('Welcome to ChatShift')
-    root.geometry('640x520')
-    root.minsize(640, 520)
+    root.geometry('600x330')
+    root.minsize(600, 330)
     root.iconbitmap(str(Path(__file__).parent / 'assets' / 'chatshift.ico'))
     frame = ttk.Frame(root, padding=28); frame.pack(fill='both', expand=True)
     ttk.Label(frame, text='Your words. More worlds.', font=('Segoe UI', 21)).pack(anchor='w')
     ttk.Label(frame, text='Text and voice · 26 languages', font=('Segoe UI', 12)).pack(anchor='w', pady=(6, 20))
-    ttk.Label(frame, wraplength=575, text='ChatShift is installed. Prepare voice downloads the local speech and noise suppression models. This can take several minutes. No microphone recording is made. Keep this window open while it works.').pack(anchor='w')
-    ttk.Label(frame, wraplength=575, text='Translation also needs Codex and your own ChatGPT account with Codex access. Open the official setup page, install/open Codex, and sign in there. ChatShift cannot sign in for you.').pack(anchor='w', pady=16)
-    from help_view import SETUP_URL
-    ttk.Button(frame, text='Open official Codex setup', command=lambda: webbrowser.open(SETUP_URL)).pack(anchor='w')
-    status = tk.StringVar(value='Ready to prepare voice. Internet connection required.')
-    ttk.Label(frame, textvariable=status, wraplength=575).pack(anchor='w', pady=(20, 8))
+    ttk.Label(frame, wraplength=540, justify='left', text='One setup gets everything ready: text, voice and noise suppression.\nRequires internet and downloads about 500 MB.').pack(anchor='w')
+    status = tk.StringVar(value='ChatShift will open automatically when setup is finished.')
+    ttk.Label(frame, textvariable=status, wraplength=540, justify='left').pack(anchor='w', pady=(20, 8))
     progress = ttk.Progressbar(frame, mode='indeterminate'); progress.pack(fill='x')
     events = queue.Queue(); result = [False]; busy = [False]
     row = ttk.Frame(frame); row.pack(fill='x', pady=18)
@@ -89,22 +85,24 @@ def welcome():
     def work():
         try:
             prepare_models(lambda text: events.put(('status', text)))
-            events.put(('done', 'Voice is ready. Finish Codex sign-in, then open ChatShift.'))
+            events.put(('done', 'ChatShift is ready. Opening…'))
         except Exception:
             (DATA / 'setup-error.log').write_text(traceback.format_exc(), encoding='utf-8')
-            events.put(('error', 'Download or model check failed. Check internet access and free disk space, then Retry. Details: ' + str(DATA / 'setup-error.log')))
+            events.put(('error', 'Setup could not finish. Check your internet connection and free disk space, then try again.'))
     def start():
-        busy[0] = True; button.config(state='disabled'); skip.config(state='disabled')
+        busy[0] = True; button.config(state='disabled', text='Setting up…')
         progress.start(); threading.Thread(target=work, daemon=True).start()
-    button = ttk.Button(row, text='Prepare voice', command=start); button.pack(side='left')
-    skip = ttk.Button(row, text='Continue with text for now', command=launch); skip.pack(side='right')
+    button = ttk.Button(row, text='Set up ChatShift', command=start); button.pack(side='left')
     def poll():
         try:
             while True:
                 kind, text = events.get_nowait(); status.set(text)
                 if kind != 'status':
-                    busy[0] = False; progress.stop(); skip.config(state='normal')
-                    button.config(state='normal', text='Open ChatShift' if kind == 'done' else 'Retry', command=launch if kind == 'done' else start)
+                    busy[0] = False; progress.stop()
+                    if kind == 'done':
+                        launch()
+                        return
+                    button.config(state='normal', text='Try again', command=start)
         except queue.Empty:
             pass
         root.after(100, poll)

@@ -10,30 +10,28 @@ Using a controller? See [controller setup](CONTROLLERS.md).
 
 ## 1. Install
 
-The new installer is under review and has not been published yet. Use the
-**ChatShift-Setup.exe** artifact supplied for review; the existing published ZIP
-is the older developer package.
+**[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Setup.exe)**
 
 1. Double-click **ChatShift-Setup.exe** and follow the Windows installer. It installs
-   only for your Windows account, with a Start Menu entry and optional desktop shortcut.
+   only for your Windows account, with Start Menu and desktop shortcuts.
    You do not need to install Python, extract a ZIP or keep a source folder.
-2. Choose **Prepare voice** in the welcome window. Internet is required for the
+2. Choose **Set up ChatShift** in the welcome window. Everything is prepared together. Internet is required for the
    Whisper small and DeepFilterNet3 models (about 500 MB). Progress shows the current
    step; downloads can take several minutes. Setup does not record the microphone.
-3. Use **Open official Codex setup** to install/open Codex and sign in with your
+3. If Codex is not ready, use **Setup** in ChatShift to install/open Codex and sign in with your
    own ChatGPT account. ChatShift cannot authenticate you. Your account needs Codex
    access; account usage limits apply. No API key or prompt is needed.
-4. Open **ChatShift** from Start, choose your languages, and enable text or voice.
+4. ChatShift opens automatically after preparation. Choose your languages and enable text or voice.
 
-If a download fails, check internet access and free disk space, then choose **Retry**.
-The error window gives the location of a diagnostic log. **ChatShift Setup** in Start
-reopens model preparation. You can continue with text while postponing voice setup.
+If a download fails, check internet access and free disk space, then choose **Try again**.
+Diagnostic details are saved in the app data folder as `setup-error.log`. **ChatShift Setup** in Start
+reopens preparation for all features.
 
 Updates use the same installer. Close ChatShift first. Settings and model downloads
 live in `%LOCALAPPDATA%/ChatShift`, separately from program files, and are preserved
 by updates and uninstall. Remove ChatShift through Windows Settings → Apps.
 An older source-folder installation is left untouched; its preferences are not
-silently copied. Keep using that version until you have finished reviewing the new one.
+silently copied.
 
 ## 2. Choose your languages and buttons
 
