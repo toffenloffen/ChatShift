@@ -41,6 +41,13 @@ limit is 1,000 characters per message; this is a game-chat tool, not a long-docu
 
 ## What is new
 
+- **Optional local noise suppression:** DeepFilterNet3 cleans microphone audio before
+  Whisper. Turn it on in Voice; no strength or threshold tuning is needed.
+- **Hear and see the difference:** Mic Test shows actual Input/Output levels, with
+  optional headphone listening and an on/off comparison. The separate speech test
+  offers original/processed playback plus recognition and translation after Stop.
+- **Stay visible at startup:** ChatShift no longer minimizes itself. **Run in background**
+  is now at the top, between Help & setup and the status badge.
 - **Settings grouped by mode:** Text and Voice each contain their own enable switch,
   shortcut and automatic sending option. Status and Pause stay visible at the bottom.
 - **One controller picture:** normal buttons and L4/L5/R4/R5 appear together, with
@@ -83,7 +90,12 @@ Keep the same chat field active until insertion finishes.
 
 Setup downloads and checks Whisper small; recognition runs locally on the CPU without a speech API key.
 Audio stays on your PC; recognized text goes to Luna when languages differ.
-**Voice → Microphone test → Open test** opens a separate quality test that never sends anything into your game.
+**Voice → Speech and translation test → Test translation** opens a separate quality test that never sends anything into your game.
+Optional DeepFilterNet3 noise suppression runs locally before recognition. Setup downloads
+its model as well as Whisper. **Mic Test** shows the raw and filtered signal levels;
+enable **Listen (headphones)** to compare with suppression on and off.
+The creator has manually tested this version, but background music, singing and other
+voices can still get through. This is not speaker identification or guaranteed silence.
 Game integration and other hardware still need manual testing. See [voice status](VOICE.md).
 
 ChatShift uses GPT-5.6 Luna through the installed Codex app server and your own ChatGPT

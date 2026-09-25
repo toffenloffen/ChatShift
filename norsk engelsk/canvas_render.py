@@ -12,6 +12,16 @@ def render(canvas, width, height):
     scale = 3
     image = Image.new('RGB', (width*scale, height*scale), canvas.cget('background'))
     draw = ImageDraw.Draw(image)
+    def shade(mask, top, bottom):
+        layer = Image.new('RGB', image.size)
+        brush = ImageDraw.Draw(layer)
+        bounds = mask.getbbox()
+        if bounds is None: return
+        for y in range(bounds[1], bounds[3]):
+            t = (y-bounds[1])/max(1, bounds[3]-bounds[1]-1)
+            color = tuple(round(a+(b-a)*t) for a,b in zip(top,bottom))
+            brush.line((0,y,image.width,y), fill=color)
+        image.paste(layer,(0,0),mask)
     for item in canvas.find_all():
         kind = canvas.type(item)
         points = canvas.coords(item)
@@ -32,7 +42,14 @@ def render(canvas, width, height):
         stroke = max(1, round(float(canvas.itemcget(item, 'width') or 1)*scale))
         if kind in ('oval', 'rectangle'):
             method = draw.ellipse if kind == 'oval' else draw.rectangle
-            method([p*scale for p in points], fill=fill, outline=outline, width=stroke)
+            box = [p*scale for p in points]
+            if 'sculpted' in canvas.gettags(item):
+                mask = Image.new('L', image.size)
+                ImageDraw.Draw(mask).ellipse(box, fill=255)
+                shade(mask, (49,61,78), (15,22,34))
+                method(box, outline=outline, width=stroke)
+            else:
+                method(box, fill=fill, outline=outline, width=stroke)
         elif kind in ('polygon', 'line'):
             pairs = list(zip(points[::2], points[1::2]))
             if kind == 'polygon' and canvas.itemcget(item, 'smooth') in ('1', 'true'):
@@ -47,7 +64,12 @@ def render(canvas, width, height):
                 pairs = curve
             pairs = [(x*scale, y*scale) for x, y in pairs]
             if kind == 'polygon':
-                draw.polygon(pairs, fill=fill)
+                if 'shell' in canvas.gettags(item):
+                    mask = Image.new('L', image.size)
+                    ImageDraw.Draw(mask).polygon(pairs, fill=255)
+                    shade(mask, (57,68,84), (26,34,47))
+                else:
+                    draw.polygon(pairs, fill=fill)
                 if outline:
                     draw.line(pairs+[pairs[0]], fill=outline, width=stroke, joint='curve')
             else:

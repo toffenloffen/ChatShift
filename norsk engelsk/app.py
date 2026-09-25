@@ -28,6 +28,27 @@ ACCENT = '#b69aff'
 
 
 class App:
+    def set_taskbar_icon(self, path):
+        """Give Explorer the full-size icon instead of Tk's small default handle."""
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.WinDLL('user32', use_last_error=True)
+        user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+        user32.GetAncestor.restype = wintypes.HWND
+        user32.LoadImageW.argtypes = [wintypes.HINSTANCE, wintypes.LPCWSTR,
+                                     wintypes.UINT, ctypes.c_int, ctypes.c_int, wintypes.UINT]
+        user32.LoadImageW.restype = wintypes.HANDLE
+        user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT,
+                                        wintypes.WPARAM, wintypes.LPARAM]
+        user32.SendMessageW.restype = wintypes.LPARAM
+        hwnd = user32.GetAncestor(self.root.winfo_id(), 2)
+        self.window_icon_handles = []
+        for kind, size in ((1, 256), (0, 32)):
+            handle = user32.LoadImageW(None, path, 1, size, size, 0x10)
+            if handle:
+                self.window_icon_handles.append(handle)
+                user32.SendMessageW(hwnd, 0x80, kind, handle)
+
     def __init__(self, root, prepare=True, show_settings=False):
         self.root = root
         self.show_settings = show_settings
@@ -59,7 +80,10 @@ class App:
         root.title('ChatShift · Chat translator')
         assets = Path(__file__).resolve().parent / 'assets'
         self.app_icon = tk.PhotoImage(file=str(assets / 'chatshift.png'))
-        root.iconphoto(True, self.app_icon)
+        taskbar_icon = str(assets / 'chatshift-taskbar.ico')
+        root.iconbitmap(taskbar_icon)
+        # Keep the size-specific ICO frames; a single PNG blurs at taskbar sizes.
+        root.after_idle(lambda: self.set_taskbar_icon(taskbar_icon))
         root.geometry(f'980x{min(930, max(660, root.winfo_screenheight() - 100))}')
         root.minsize(940, 660)
         root.configure(bg=BG)
@@ -142,6 +166,9 @@ class App:
                  font=('Segoe UI', 9, 'bold'), padx=15, pady=10,
                  highlightthickness=1, highlightbackground=BORDER)
         self.ready_indicator.pack(side='right')
+        self.start_button = ttk.Button(header, text='Run in background', style='Accent.TButton',
+                                      command=self.start, state='disabled')
+        self.start_button.pack(side='right', padx=(0, 12))
         ttk.Button(header, text='Help & setup', style='Small.TButton',
                    command=lambda: show_help(self.root)).pack(side='right', padx=12)
         body = tk.Frame(shell, bg=BG)
@@ -201,11 +228,11 @@ class App:
         test_area.pack(fill='x')
         test_copy = tk.Frame(test_area, bg=CARD)
         test_copy.pack(side='left', fill='x', expand=True)
-        tk.Label(test_copy, text='Microphone test', bg=CARD, fg=TEXT,
+        tk.Label(test_copy, text='Speech and translation test', bg=CARD, fg=TEXT,
                  font=('Segoe UI', 11, 'bold')).pack(anchor='w')
-        tk.Label(test_copy, text='Try your voice here. Nothing goes to your game.',
+        tk.Label(test_copy, text='Check recognized words and their translation.',
                  bg=CARD, fg=MUTED, font=('Segoe UI', 9)).pack(anchor='w', pady=(3, 0))
-        ttk.Button(test_area, text='Open test', style='Small.TButton',
+        ttk.Button(test_area, text='Test translation', style='Small.TButton',
                    command=self.open_voice_trial).pack(side='right', padx=(12, 0))
         shortcut_header = tk.Frame(shortcut_card, bg=CARD)
         ttk.Checkbutton(shortcut_card, text='Enable text translation', variable=self.text_enabled,
@@ -216,11 +243,6 @@ class App:
         shortcut_header.pack(fill='x')
         tk.Label(shortcut_header, text='Text shortcut', bg=CARD, fg=TEXT,
                  font=('Segoe UI', 12, 'bold')).pack(side='left')
-        self.shortcut_button = ttk.Button(shortcut_header, text='Change shortcut',
-            style='Small.TButton', command=self.change_shortcut)
-        self.shortcut_button.pack(side='right')
-        ttk.Button(shortcut_header, text='How to set up', style='Small.TButton',
-                   command=lambda: show_help(self.root, 'Shortcuts')).pack(side='right', padx=8)
         keys = tk.Frame(shortcut_card, bg=CARD)
         keys.pack(anchor='w', pady=(12, 8))
         tk.Label(keys, textvariable=self.shortcut_text, bg='#23334a', fg=TEXT,
@@ -230,12 +252,13 @@ class App:
         self.combine_keys = tk.BooleanVar(value=False)
         devices = tk.Frame(shortcut_card, bg=CARD)
         devices.pack(fill='x', pady=(12, 5))
-        self.mouse_preview = MousePreview(devices, self.binding,
-            on_pick=self.pick_shortcut_key, on_finish=self.save_shortcut_draft)
-        self.mouse_preview.pack(side='right', padx=(10, 0))
-        self.keyboard_preview = KeyboardPreview(devices, self.binding,
+        from keyboard_preview import KeyboardMousePreview
+        self.keyboard_preview = KeyboardMousePreview(devices, self.binding,
             on_pick=self.pick_shortcut_key, on_finish=self.save_shortcut_draft)
         self.keyboard_preview.pack(side='left', fill='x', expand=True)
+        self.mouse_preview = self.keyboard_preview
+        shortcut_header.pack_configure(after=devices, pady=(8, 0))
+        keys.pack_configure(after=shortcut_header)
         tk.Label(shortcut_card,
             text='Click a key or mouse button to select it. Click again to remove.\n'
                  'For a combination: hold right mouse, left-click up to 3 buttons, then release.',
@@ -252,11 +275,41 @@ class App:
             command=self.cancel_shortcut_draft).pack(side='left', padx=8)
         self.key_instructions = tk.StringVar(value=self.shortcut_instructions())
 
+        # Reserve the same space above the shared artwork in both input tabs.
+        text_spacer = tk.Frame(shortcut_card, bg=CARD, height=0)
+        text_spacer.pack(before=devices, fill='x')
+        voice_spacer = tk.Frame(voice_shortcut_card, bg=CARD, height=0)
+        voice_spacer.pack(before=self.voice.devices_frame, fill='x')
+
+        def intro_height(page, artwork, spacer):
+            height = 0
+            for widget in page.pack_slaves():
+                if widget == artwork:
+                    break
+                if widget == spacer:
+                    continue
+                info = widget.pack_info()
+                padding = info.get('pady', 0)
+                padding = padding if isinstance(padding, tuple) else self.root.tk.splitlist(str(padding))
+                values = [self.root.winfo_pixels(value) for value in padding]
+                height += widget.winfo_reqheight() + (sum(values) if len(values) > 1 else 2 * values[0])
+            return height
+
         def fit_tab(event=None):
+            text_height = intro_height(shortcut_card, devices, text_spacer)
+            voice_height = intro_height(voice_shortcut_card, self.voice.devices_frame, voice_spacer)
+            baseline = max(text_height, voice_height)
+            for spacer, height in ((text_spacer, text_height), (voice_spacer, voice_height)):
+                wanted = max(1, baseline - height + 1)
+                if int(spacer.cget('height')) != wanted:
+                    spacer.configure(height=wanted)
             selected = self.shortcut_tabs.select()
             if selected:
                 page = self.shortcut_tabs.nametowidget(selected)
-                self.shortcut_tabs.configure(height=page.winfo_reqheight())
+                height = (max(shortcut_card.winfo_reqheight(), voice_shortcut_card.winfo_reqheight())
+                          if page in (shortcut_card, voice_shortcut_card) else page.winfo_reqheight())
+                if int(self.shortcut_tabs.cget('height')) != height:
+                    self.shortcut_tabs.configure(height=height)
         self.shortcut_tabs.bind('<<NotebookTabChanged>>', fit_tab)
         for page in (shortcut_card, voice_shortcut_card, controller_card):
             page.bind('<Configure>', fit_tab)
@@ -272,9 +325,6 @@ class App:
                      anchor='w', fill='x', pady=(7, 0))
         footer = tk.Frame(dock, bg=CARD)
         footer.pack(side='right', padx=(14, 0))
-        self.start_button = ttk.Button(footer, text='Run in background', style='Accent.TButton',
-                                      command=self.start, state='disabled')
-        self.start_button.pack(side='left')
         self.stop_button = ttk.Button(footer, text='Pause', command=self.stop, state='disabled')
         self.stop_button.pack(side='left', padx=10)
         tk.Label(outer, text='Uses your ChatGPT sign-in · Internet required\nMessages go to OpenAI and use your Codex allowance.',
@@ -310,7 +360,10 @@ class App:
                               shortcut=self.binding, source_language=self.source_language.get(),
                               text_enabled=self.text_enabled.get(), voice_shortcut=self.voice.binding,
                               voice_enabled=self.voice.enabled.get(), voice_mode=self.voice.mode.get(),
-                              voice_auto_send=self.voice.auto_send.get())
+                              voice_auto_send=self.voice.auto_send.get(),
+                              noise_enabled=self.voice.noise_enabled.get(),
+                              noise_strength=self.voice.noise_strength.get(),
+                              noise_threshold=self.voice.noise_threshold.get())
             except OSError:
                 self.status.set('This choice works now, but could not be saved. Check folder permissions.')
                 return
@@ -561,7 +614,7 @@ class App:
             self.local = local
             if local:
                 self.start_button.configure(state='normal')
-                self.start(minimize=not self.show_settings)
+                self.start(minimize=False)
             else:
                 self.status.set(error)
                 self.badge.set('NEEDS ATTENTION')
@@ -630,6 +683,9 @@ class App:
 
 
 if __name__ == '__main__':
+    # Give Windows a stable app identity instead of grouping us under Python.
+    import ctypes
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('ToffenLoffen.ChatShift')
     instance = win.acquire_instance()
     if instance:
         try:

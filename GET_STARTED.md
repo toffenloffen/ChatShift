@@ -13,7 +13,7 @@ Using a controller? See [controller setup](CONTROLLERS.md).
 1. [Download ChatShift-Windows.zip](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Windows.zip) and choose **Extract all**. Keep the extracted folder in a permanent location.
 2. Double-click **Install ChatShift.cmd**. Follow any installer prompts.
    It installs Python 3.13 if needed through Windows Package Manager, installs voice
-   dependencies, downloads and checks Whisper small, and creates a desktop shortcut.
+   dependencies, downloads and checks Whisper small and DeepFilterNet3, and creates a desktop shortcut.
    Internet is required. The model is several hundred MB; setup may take several minutes.
    Wait for **Setup complete**. No microphone recording is made during setup.
 3. Install [Codex](https://learn.chatgpt.com/docs/windows/windows-app), open it,
@@ -64,15 +64,25 @@ Using a gamepad? Open **Controller** for its clickable diagram and see the
 [controller guide](CONTROLLERS.md), including rear-button mapping. Status and Pause
 stay visible at the bottom while you browse settings.
 
-Want to test the microphone first? Open **Voice → Microphone test → Open test**.
-Record a short sentence. The test shows the result without writing into your game.
+Want to check noise suppression? Enable **Voice → Noise suppression (DeepFilterNet3)**,
+click **Mic Test**, and optionally enable **Listen (headphones)**. Input shows your
+microphone before filtering; Output shows the filtered audio. Switch suppression off
+and on while listening to compare. Click **Stop Test** when finished.
+
+For text results, open **Voice → Speech and translation test → Test translation**.
+Click **Start recording**, speak, then **Stop recording**. The test displays Whisper's
+transcription and the translation, without writing into your game. **Listen: original**
+and **Listen: processed** let you compare the same recording. Starting this recording
+stops an active Mic Test first. Background voices and singing may still be recognized;
+check the words as well as the sound.
 
 ## Good to know
 
 - Always open a chat field first. ChatShift cannot reliably detect closed game chat;
   it may still process speech and attempt insertion when no chat is open.
 - ChatShift translates your outgoing messages, not messages from other players.
-- **Run in background** hides the window. **Pause** stops shortcuts. Closing exits the app.
+- The window stays open at startup. **Run in background** at the top hides it when you choose.
+  **Pause** stops shortcuts. Closing exits the app.
 - Audio stays in memory on your PC. Text goes to OpenAI when translation is needed.
 - Your clipboard is overwritten during insertion. Check the field before retrying a failure.
 - Microphone selection currently resets to the Windows default when you restart.

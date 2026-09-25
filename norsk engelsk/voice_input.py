@@ -52,6 +52,9 @@ class VoiceInput:
     def __init__(self, app, saved):
         self.app = app
         self.enabled = tk.BooleanVar(value=saved.get('voice_enabled', False))
+        self.noise_enabled = tk.BooleanVar(value=saved.get('noise_enabled', False))
+        self.noise_strength = tk.DoubleVar(value=saved.get('noise_strength', 50))
+        self.noise_threshold = tk.DoubleVar(value=saved.get('noise_threshold', -50))
         self.mode = tk.StringVar(value=saved.get('voice_mode', 'hold'))
         self.auto_send = tk.BooleanVar(value=saved.get('voice_auto_send', False))
         self.binding = validate_binding(saved.get('voice_shortcut') or {'modifiers': [], 'key': None})
@@ -69,27 +72,42 @@ class VoiceInput:
         self.devices = {'System default microphone': None}
 
     def build(self, parent):
-        ttk.Label(parent, textvariable=self.label, font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=(10, 6))
-        ttk.Radiobutton(parent, text='Hold to talk', variable=self.mode, value='hold', command=self.changed).pack(anchor='w')
+        ttk.Radiobutton(parent, text='Push to talk', variable=self.mode, value='hold', command=self.changed).pack(anchor='w')
         ttk.Radiobutton(parent, text='Press to start · press again to stop', variable=self.mode, value='toggle', command=self.changed).pack(anchor='w')
         ttk.Checkbutton(parent, text='Send voice messages automatically', variable=self.auto_send,
                         command=self.changed).pack(anchor='w', pady=5)
         devices = tk.Frame(parent, bg='#1b1e2e')
-        devices.pack(fill='x', pady=8)
-        self.mouse = MousePreview(devices, self.binding, self.pick, self.save_draft)
-        self.mouse.pack(side='right')
-        self.keyboard = KeyboardPreview(devices, self.binding, self.pick, self.save_draft)
+        devices.pack(fill='x', pady=(12, 5))
+        self.devices_frame = devices
+        from keyboard_preview import KeyboardMousePreview
+        self.keyboard = KeyboardMousePreview(devices, self.binding, self.pick, self.save_draft)
         self.keyboard.pack(side='left', fill='x', expand=True)
+        self.mouse = self.keyboard
+        tk.Label(parent, text='Voice shortcut', bg='#1b1e2e', fg='#f0f0fa',
+                 font=('Segoe UI', 12, 'bold')).pack(anchor='w', pady=(8, 0))
+        tk.Label(parent, textvariable=self.label, bg='#23334a', fg='#f0f0fa',
+                 font=('Segoe UI', 13, 'bold'), padx=12, pady=5, wraplength=500,
+                 justify='left').pack(anchor='w', pady=(12, 8))
         ttk.Label(parent, text='Click to select. Click again to remove.\nFor a combo: hold right mouse, click each button with left mouse, then release right mouse.',
                   wraplength=600).pack(anchor='w')
         ttk.Label(parent, text='Microphone', font=('Segoe UI', 10, 'bold')).pack(anchor='w', pady=(12, 0))
         self.device_picker = ttk.Combobox(parent, textvariable=self.device, values=list(self.devices), state='readonly')
         self.device_picker.pack(fill='x', pady=8)
         self.device_picker.bind('<<ComboboxSelected>>', lambda event: self.abort('Microphone changed.'))
+        cleanup = tk.Frame(parent, bg=parent.cget('background'))
+        cleanup.pack(fill='x', pady=8)
+        ttk.Checkbutton(cleanup, text='Noise suppression (DeepFilterNet3)', variable=self.noise_enabled,
+                        command=self.noise_changed).pack(anchor='w')
+        from mic_monitor import MicMonitor
+        self.monitor = MicMonitor(self, cleanup)
         ttk.Label(parent, textvariable=self.hint, wraplength=600).pack(anchor='w', pady=8)
-        self.cancel_button = ttk.Button(parent, text='Cancel recording', state='disabled',
-            command=lambda: self.abort('Voice cancelled.'))
-        self.cancel_button.pack(anchor='w')
+
+    def noise_options(self):
+        return dict(enabled=self.noise_enabled.get(), strength=100,
+                    threshold=self.noise_threshold.get(), apply_gate=False)
+
+    def noise_changed(self, event=None):
+        self.app.preferences_changed()
 
     def pick(self, key, combine=False):
         if self.draft is None:
@@ -128,7 +146,7 @@ class VoiceInput:
         self.keyboard.set_binding(binding)
         self.mouse.set_binding(binding)
         self.changed()
-        self.hint.set(('Moved from Text to Voice: ' if moved else 'Voice shortcut: ') + binding_label(binding))
+        self.hint.set('Shortcut moved from Text to Voice.' if moved else '')
 
     def conflicts_with_text(self, binding, text_binding=None, use_current=True):
         if binding['key'] is None:
@@ -199,6 +217,7 @@ class VoiceInput:
         self.destination = self.app.language.get()
         self.session_mode = self.mode.get()
         self.session_send = self.auto_send.get()
+        self.session_noise = self.noise_options()
         self.session_binding = dict(self.binding)
         self.owner = self.app.root.winfo_id()
         self.cancel = threading.Event()
@@ -210,7 +229,6 @@ class VoiceInput:
             self.app.status.set(str(exc))
             return
         self.recording = self.app.busy = True
-        self.cancel_button.configure(state='normal', text='Cancel recording')
         self.app.badge.set('LISTENING')
         self.app.status.set('Listening… release the shortcut to finish.' if self.session_mode == 'hold' else 'Listening… press the shortcut again to finish.')
         self.hint.set('Listening · automatic sending ON.' if self.session_send else 'Listening · review before sending.')
@@ -221,20 +239,20 @@ class VoiceInput:
             audio = self.recorder.stop()
         except ValueError as exc:
             self.app.busy = False
-            self.cancel_button.configure(state='disabled', text='Cancel recording')
             self.hint.set(str(exc))
             self.app.status.set(str(exc))
             self.app.badge.set('READY')
             return
         self.processing = True
-        self.cancel_button.configure(state='normal', text='Cancel voice message')
         self.app.badge.set('TRANSCRIBING')
         self.app.status.set('Recognizing your voice… stay in the same chat field.')
         cancel = self.cancel
         def work():
             started = time.perf_counter()
             try:
-                text = self.model.transcribe(audio, self.source)
+                from audio_cleanup import clean_audio
+                cleaned = clean_audio(audio, **self.session_noise)
+                text = self.model.transcribe(cleaned, self.source)
                 if cancel.is_set():
                     return
                 if len(text) > 1000:
@@ -254,10 +272,11 @@ class VoiceInput:
         threading.Thread(target=work, daemon=True).start()
 
     def abort(self, message):
+        if hasattr(self, 'monitor'):
+            self.monitor.stop()
         if not self.recording and not self.processing:
             return
         self.cancel.set()
-        self.cancel_button.configure(state='disabled')
         if self.recorder:
             self.recorder.close()
             self.recorder.chunks.clear()
@@ -269,6 +288,8 @@ class VoiceInput:
         self.app.badge.set('READY' if self.app.registered else 'PAUSED')
 
     def poll(self):
+        if hasattr(self, 'monitor'):
+            self.monitor.poll()
         if self.recording or self.processing:
             try:
                 changed = win.focus_snapshot() != self.target or win.last_input() != self.revision
@@ -305,6 +326,5 @@ class VoiceInput:
                         self.app.badge.set('READY' if kind == 'done' else 'NEEDS ATTENTION')
                 elif kind == 'released':
                     self.processing = self.app.busy = False
-                    self.cancel_button.configure(state='disabled', text='Cancel recording')
         except queue.Empty:
             pass

@@ -4,7 +4,7 @@ import tkinter as tk
 
 class ControllerPreview(tk.Canvas):
     def __init__(self, parent, on_pick):
-        super().__init__(parent, width=700, height=310, bg='#0d1421', highlightthickness=0)
+        super().__init__(parent, width=700, height=325, bg='#1b1e2e', highlightthickness=0)
         self.on_pick = on_pick
         self.selection = set()
         self.buttons = {}
@@ -48,76 +48,80 @@ class ControllerPreview(tk.Canvas):
 
     def draw(self):
         self.delete('all')
-        shell = (164, 77, 201, 64, 276, 66, 309, 77, 391, 77, 424, 66,
-                 499, 64, 536, 77, 560, 112, 579, 172, 590, 235,
-                 581, 267, 559, 277, 540, 267, 492, 218, 454, 209,
-                 413, 219, 287, 219, 246, 209, 208, 218, 160, 267,
-                 141, 277, 119, 267, 110, 235, 121, 172, 140, 112)
-        shadow = tuple(v + (7 if i % 2 else 0) for i, v in enumerate(shell))
-        self.create_polygon(*shadow, smooth=True, splinesteps=32, fill='#090d17', outline='', width=0)
-        self.create_polygon(*shell, smooth=True, splinesteps=32,
-                            fill='#292e43', outline='#667191', width=2)
-        # Sculpted grip panels and restrained accent lighting.
-        for flip in (False, True):
-            points = [(147, 169), (170, 184), (191, 210), (151, 257),
-                      (137, 260), (124, 244), (130, 202)]
-            coords = [v for x, y in points for v in ((700-x if flip else x), y)]
-            self.create_polygon(*coords, smooth=True, fill='#1b2031', outline='#343d56')
-            for offset in range(5):
-                x = 139 + offset*4
-                self.create_line(700-x if flip else x, 211,
-                                 700-(x-5) if flip else x-5, 241,
-                                 fill='#30384e', width=1)
-        self.create_line(172, 81, 215, 75, 277, 77, smooth=True, fill='#77639f', width=2)
-        self.create_line(423, 77, 485, 75, 528, 81, smooth=True, fill='#568b94', width=2)
-        self.rounded(325, 86, 375, 112, fill='#171c2b', outline='#64758c')
-        self.create_text(350, 99, text='CS', fill='#9feadd', font=('Segoe UI', 10, 'bold'))
-        self.create_oval(214, 146, 340, 259, fill='#202538', outline='#39435d')
-        self.create_oval(165, 91, 249, 175, fill='#151a29', outline='#586482', width=2)
-        self.create_oval(365, 166, 449, 250, fill='#151a29', outline='#586482', width=2)
-        self.buttons = {
-            'LT': (185, 20, 275, 46, 'LT', False), 'RT': (425, 20, 515, 46, 'RT', False),
-            'LB': (175, 51, 280, 78, 'LB', False), 'RB': (420, 51, 525, 78, 'RB', False),
-            'Left stick click': (172, 98, 242, 168, 'LS', True),
-            'View': (285, 118, 331, 147, 'View', False),
-            'Menu': (369, 118, 415, 147, 'Menu', False),
-            'D-pad Up': (260, 157, 294, 187, '↑', False),
-            'D-pad Left': (225, 188, 259, 218, '←', False),
-            'D-pad Right': (295, 188, 329, 218, '→', False),
-            'D-pad Down': (260, 219, 294, 249, '↓', False),
-            'Right stick click': (372, 173, 442, 243, 'RS', True),
-            'Y': (494, 89, 530, 125, 'Y', True),
-            'X': (455, 128, 491, 164, 'X', True),
-            'B': (533, 128, 569, 164, 'B', True),
-            'A': (494, 167, 530, 203, 'A', True)}
-        self.buttons.update({
-            'Rear L4 (left hand, upper)': (18, 118, 92, 157, 'L4', False),
-            'Rear L5 (left hand, lower)': (18, 176, 92, 215, 'L5', False),
-            'Rear R4 (right hand, upper)': (608, 118, 682, 157, 'R4', False),
-            'Rear R5 (right hand, lower)': (608, 176, 682, 215, 'R5', False)})
-        for x, title in ((55, 'LEFT HAND'), (645, 'RIGHT HAND')):
-            self.create_text(x, 90, text=title, fill='#a6acc6', font=('Segoe UI', 9, 'bold'))
-            self.create_text(x, 239, text='Rear buttons', fill='#a6acc6', font=('Segoe UI', 8))
-            self.create_text(x, 255, text='Click to set up', fill='#b69aff', font=('Segoe UI', 8))
+        # Geometry traced from the supplied reference, in its original proportions.
+        def xy(points):
+            return [v for x,y in points for v in ((x-58)*1.55,(y-139)*1.55)]
+        reference={
+          'LT':(159,144,200,158,'LT',False),'RT':(366,144,407,158,'RT',False),
+          'LB':(154,161,195,175,'LB',False),'RB':(371,161,412,175,'RB',False),
+          'Left stick click':(197,205,223,231,'LS',True),
+          'View':(255,211,271,227,'View',True),'Menu':(295,211,311,227,'Menu',True),
+          'D-pad Up':(239,242,251,257,'↑',False),'D-pad Down':(239,271,251,286,'↓',False),
+          'D-pad Left':(223,258,238,270,'←',False),'D-pad Right':(252,258,267,270,'→',False),
+          'Right stick click':(308,250,334,276,'RS',True),
+          'Y':(348,192,367,211,'Y',True),'X':(330,211,349,230,'X',True),
+          'B':(367,211,386,230,'B',True),'A':(348,230,367,249,'A',True),
+          'Rear L4 (left hand, upper)':(79,211,126,234,'L4',False),
+          'Rear L5 (left hand, lower)':(79,238,126,260,'L5',False),
+          'Rear R4 (right hand, upper)':(439,211,486,234,'R4',False),
+          'Rear R5 (right hand, lower)':(439,238,486,260,'R5',False)}
+        self.buttons={n:(*xy([(v[0],v[1]),(v[2],v[3])]),v[4],v[5]) for n,v in reference.items()}
+        # Button centers measured on the shared cutout, mapped to its display bounds.
+        def box(x1,y1,x2,y2):
+            return (136+(x1-80)*420/1475,28+(y1-12)*280/938,
+                    136+(x2-80)*420/1475,28+(y2-12)*280/938)
+        internal = {
+            'Left stick click':(351,249,521,419),
+            'Right stick click':(933,465,1103,635),
+            'View':(671,297,752,379),'Menu':(877,297,958,379),
+            'Y':(1157,201,1264,308),'X':(1067,297,1173,403),
+            'B':(1255,297,1361,403),'A':(1157,391,1264,498),
+            'D-pad Up':(577,453,655,524),'D-pad Down':(577,610,655,680),
+            'D-pad Left':(497,530,572,602),'D-pad Right':(660,530,735,602)}
+        for name, coords in internal.items():
+            old=self.buttons[name]
+            self.buttons[name]=(*box(*coords),old[4],old[5])
+        for x,title in ((102,'LEFT HAND'),(463,'RIGHT HAND')):
+            self.create_text(*xy([(x,201)]),text=title,fill='#a6acc6',font=('Segoe UI',8,'bold'))
+            self.create_text(*xy([(x,271)]),text='Rear buttons',fill='#a6acc6',font=('Segoe UI',8))
+            self.create_text(*xy([(x,281)]),text='Click to set up',fill='#a6acc6',font=('Segoe UI',8))
         face_colors = {'A': '#80dc9b', 'B': '#ff969f', 'X': '#8cc9ff', 'Y': '#ffe193'}
         for index, (name, (x1, y1, x2, y2, label, round_button)) in enumerate(self.buttons.items()):
+            if name in internal:
+                continue
             tag = 'button_' + str(index)
             selected = name in self.selection
-            focused = self.focus_get() == self and index == self.focus_index
             color = '#c1fff1' if selected else '#40526b'
             shape = self.create_oval if round_button else self.rounded
-            shape(x1-3, y1-3, x2+3, y2+3, fill='#285851' if selected else '#1b2032',
-                  outline='#b69aff' if focused else color, width=2, tags=tag)
-            shape(x1, y1, x2, y2, fill='#77f2db' if selected else '#202c40',
-                  outline=color, width=1, tags=tag)
+            if selected:
+                shape(x1-3, y1-3, x2+3, y2+3, fill='#285851' if selected else '#1b2032',
+                      outline=color, width=2, tags=tag)
+            if not name.startswith('D-pad') or selected:
+                shape(x1, y1, x2, y2, fill='#77f2db' if selected else '#202c40',
+                  outline=color, width=1, tags=(tag, 'sculpted') if round_button and not selected else tag)
             if 'stick click' in name:
                 self.create_oval(x1+7, y1+7, x2-7, y2-7, outline='#d6fff5' if selected else '#3a4662', width=2, tags=tag)
-            self.create_text((x1+x2)/2, (y1+y2)/2, text=label,
+            self.create_text((x1+x2)/2, (y1+y2)/2, text=('▣' if name == 'View' else '≡' if name == 'Menu' else label),
                              fill='#10111b' if selected else face_colors.get(name, '#e2e7fa'),
                              font=('Segoe UI', 10, 'bold'), tags=tag)
-        self.create_text(350, 294, text='LS / RS = press the stick · Rear buttons need Steam Input setup',
-                         fill='#a6acc6', font=('Segoe UI', 9))
+            if name in ('View', 'Menu'):
+                self.create_text((x1+x2)/2, y2+12, text=label, fill='#a6acc6', font=('Segoe UI', 8))
         from canvas_render import render
-        self.rendered = render(self, 700, 310)
-        if self.rendered is not None:
-            self.create_image(0, 0, image=self.rendered, anchor='nw')
+        from PIL import Image, ImageTk, ImageDraw
+        from pathlib import Path
+        surface = render(self, 700, 325)
+        if surface is not None:
+            frame = ImageTk.getimage(surface).convert('RGBA')
+            if not hasattr(self, 'artwork'):
+                source = Image.open(Path(__file__).with_name('assets') / 'controller-cutout.png').convert('RGBA')
+                self.artwork = source.crop((80,12,1555,950)).resize((420,280),Image.Resampling.LANCZOS)
+            frame.alpha_composite(self.artwork,(136,28))
+            overlay=Image.new('RGBA',frame.size)
+            pen=ImageDraw.Draw(overlay)
+            for name in self.selection & internal.keys():
+                x1,y1,x2,y2,_,round_button=self.buttons[name]
+                method=pen.ellipse if round_button else pen.rounded_rectangle
+                method((x1,y1,x2,y2),fill=(65,235,174,110),outline=(119,242,219,255),width=2)
+            frame=Image.alpha_composite(frame,overlay)
+            self.rendered=ImageTk.PhotoImage(frame,master=self)
+            self.create_image(0,0,image=self.rendered,anchor='nw')

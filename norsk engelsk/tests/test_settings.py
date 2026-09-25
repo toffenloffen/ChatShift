@@ -10,7 +10,8 @@ class SettingsTests(unittest.TestCase):
             path = Path(folder) / 'settings.json'
             save_settings('French', False, path)
             self.assertEqual(load_settings(path), {'source_language': 'Norwegian', 'target_language': 'French', 'auto_send': False, 'shortcut': None, 'text_enabled': True,
-                'voice_shortcut': {'modifiers': [], 'key': None}, 'voice_enabled': False, 'voice_mode': 'hold', 'voice_auto_send': False})
+                'voice_shortcut': {'modifiers': [], 'key': None}, 'voice_enabled': False, 'voice_mode': 'hold', 'voice_auto_send': False,
+                'noise_enabled': False, 'noise_strength': 50, 'noise_threshold': -50})
 
     def test_voice_options_are_independent_and_persist(self):
         with tempfile.TemporaryDirectory() as folder:

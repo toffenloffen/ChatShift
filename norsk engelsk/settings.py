@@ -31,6 +31,12 @@ def load_settings(path=SETTINGS_PATH):
                 result['voice_enabled'] = data['voice_enabled']
             if isinstance(data.get('voice_auto_send'), bool):
                 result['voice_auto_send'] = data['voice_auto_send']
+            if isinstance(data.get('noise_enabled'), bool):
+                result['noise_enabled'] = data['noise_enabled']
+            for key, default, low, high in (('noise_strength', 50, 0, 100), ('noise_threshold', -50, -70, -20)):
+                value = data.get(key)
+                if isinstance(value, (int, float)) and low <= value <= high:
+                    result[key] = value
             if data.get('voice_mode') in ('hold', 'toggle'):
                 result['voice_mode'] = data['voice_mode']
     except (OSError, ValueError):
@@ -39,7 +45,8 @@ def load_settings(path=SETTINGS_PATH):
 
 
 def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source_language='Norwegian', text_enabled=True,
-                  voice_shortcut=None, voice_enabled=False, voice_mode='hold', voice_auto_send=False):
+                  voice_shortcut=None, voice_enabled=False, voice_mode='hold', voice_auto_send=False,
+                  noise_enabled=False, noise_strength=50, noise_threshold=-50):
     if language not in LANGUAGES or source_language not in LANGUAGES:
         raise ValueError('Choose a language from the list.')
     temporary = path.with_suffix('.tmp')
@@ -49,5 +56,8 @@ def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source
                                     'voice_shortcut': validate_binding(voice_shortcut or {'modifiers': [], 'key': None}),
                                     'voice_enabled': bool(voice_enabled), 'voice_mode': voice_mode,
                                     'voice_auto_send': bool(voice_auto_send),
+                                    'noise_enabled': bool(noise_enabled),
+                                    'noise_strength': max(0, min(100, float(noise_strength))),
+                                    'noise_threshold': max(-70, min(-20, float(noise_threshold))),
                                     'shortcut': validate_binding(shortcut)}), encoding='utf-8')
     temporary.replace(path)

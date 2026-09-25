@@ -13,19 +13,21 @@ class VoiceTrial:
         self.closed = False
         self.recording = False
         self.model = None
-        self.recorder = Recorder()
+        from filtered_recorder import FilteredRecorder
+        self.recorder = FilteredRecorder()
         self.events = queue.Queue()
         self.cancel = threading.Event()
         self.owns_busy = False
+        self.raw_audio = self.filtered_audio = None
         self.window = tk.Toplevel(app.root)
         self.window.title('ChatShift · Local voice test')
-        self.window.geometry('690x570')
+        self.window.geometry('690x800')
         self.window.configure(bg='#10111b')
         body = ttk.Frame(self.window, padding=20)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text='Try your microphone', font=('Segoe UI', 18, 'bold')).pack(anchor='w')
         ttk.Label(body, text='Record a short sentence, then check what the AI heard.\nThis test does not send anything to your game.').pack(anchor='w', pady=8)
-        self.status = tk.StringVar(value='Loading local speech model… First setup downloads the model.')
+        self.status = tk.StringVar(value='Ready. Start recording, speak, then Stop recording to see both texts.')
         ttk.Label(body, textvariable=self.status, wraplength=640).pack(anchor='w', pady=8)
         self.devices = [None]
         names = ['Windows default microphone']
@@ -37,9 +39,25 @@ class VoiceTrial:
             self.status.set('Could not list microphones. Check your audio devices.')
         self.device = ttk.Combobox(body, values=names, state='readonly')
         self.device.current(0)
+        selected = app.voice.devices.get(app.voice.device.get())
+        if selected in self.devices:
+            self.device.current(self.devices.index(selected))
         self.device.pack(fill='x', pady=8)
-        self.button = ttk.Button(body, text='Start recording', command=self.toggle, state='disabled')
+        self.button = ttk.Button(body, text='Start recording', command=self.toggle)
         self.button.pack(anchor='w', pady=8)
+        self.level = tk.Canvas(body, height=76, bg='#182334', highlightthickness=0)
+        self.level.pack(fill='x', pady=4)
+        self.reading = (-120., -120.)
+        self.level.bind('<Configure>', lambda e: self.draw_levels())
+        self.noise_option = ttk.Checkbutton(body, text='Noise suppression (DeepFilterNet3)', variable=app.voice.noise_enabled, command=app.voice.noise_changed)
+        self.noise_option.pack(anchor='w')
+        playback = ttk.Frame(body)
+        playback.pack(fill='x', pady=8)
+        self.play_original = ttk.Button(playback, text='Listen: original', state='disabled', command=lambda: self.play(False))
+        self.play_original.pack(side='left')
+        self.play_filtered = ttk.Button(playback, text='Listen: processed', state='disabled', command=lambda: self.play(True))
+        self.play_filtered.pack(side='left', padx=8)
+        ttk.Button(playback, text='Stop playback', command=self.stop_playback).pack(side='left')
         ttk.Label(body, text='What the microphone heard').pack(anchor='w')
         self.original = tk.Text(body, height=4, wrap='word', bg='#1b1e2e', fg='#f2f3ff', insertbackground='white')
         self.original.pack(fill='x', pady=5)
@@ -49,57 +67,103 @@ class VoiceTrial:
         ttk.Label(body, text='Audio stays on this PC. Recognized text goes to Luna when languages differ.\nRecording stops automatically after 30 seconds.', wraplength=640).pack(anchor='w', pady=8)
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = self.window.after(50, self.poll)
-        threading.Thread(target=self.load, daemon=True).start()
 
-    def load(self):
-        try:
-            model = getattr(self.app, 'speech_model', None) or LocalTranscriber()
-            if not self.cancel.is_set():
-                self.events.put(('model', model))
-        except Exception:
-            self.events.put(('error', 'Speech model could not load. Check internet access and free disk space, then reopen this test.'))
+    def draw_levels(self):
+        from mic_monitor import MicMonitor
+        # Share only the meter painter, not another test or recording control.
+        painter = type('Meter', (), {})()
+        painter.meter, painter.reading = self.level, self.reading
+        MicMonitor.draw(painter)
+
+    def stop_playback(self):
+        import sounddevice as sd
+        sd.stop()
+
+    def play(self, filtered):
+        import sounddevice as sd
+        audio = self.filtered_audio if filtered else self.raw_audio
+        if audio is not None and not self.recording:
+            try:
+                sd.play(audio, Recorder.RATE)
+            except Exception:
+                self.status.set('Could not play audio. Check your output device.')
 
     def toggle(self):
         if self.recording:
             self.recording = False
             self.button.configure(state='disabled', text='Processing…')
             try:
-                audio = self.recorder.stop()
+                audio, cleaned = self.recorder.stop()
             except ValueError as exc:
                 self.finish(str(exc))
                 return
-            self.status.set('Recognizing speech on this PC…')
-            threading.Thread(target=self.process, args=(audio,), daemon=True).start()
+            self.status.set('Processing audio on this PC…')
+            threading.Thread(target=self.process, args=(audio, cleaned), daemon=True).start()
+            return
+        monitor = getattr(self.app.voice, 'monitor', None)
+        if monitor is not None and monitor.thread is not None:
+            monitor.stop()
+            self.button.configure(state='disabled')
+            self.status.set('Stopping Mic Test before recording...')
+            self.window.after(50, self.wait_for_monitor)
             return
         if self.app.busy:
             self.status.set('Wait for the current translation to finish.')
             return
+        self.session_noise = self.app.voice.noise_options()
+        self.session_text = True
         self.source = self.app.source_language.get()
         self.target = self.app.language.get()
-        if self.source != self.target and self.app.local is None:
-            self.status.set('Wait for Luna to be ready, or choose matching languages for dictation only.')
-            return
         try:
-            self.recorder.start(self.devices[self.device.current()])
+            self.stop_playback()
+            self.recorder.start(self.devices[self.device.current()], self.session_noise['enabled'])
         except ValueError as exc:
             self.status.set(str(exc))
             return
         self.app.busy = self.owns_busy = True
         self.recording = True
         self.device.configure(state='disabled')
+        self.noise_option.configure(state='disabled')
+        self.play_original.configure(state='disabled')
+        self.play_filtered.configure(state='disabled')
+        self.raw_audio = self.filtered_audio = None
         self.button.configure(text='Stop recording')
         self.original.delete('1.0', 'end')
         self.output.delete('1.0', 'end')
         self.status.set(f'Listening · {self.source} → {self.target}. Click Stop recording when finished.')
 
-    def process(self, audio):
+    def wait_for_monitor(self):
+        if self.closed:
+            return
+        monitor = getattr(self.app.voice, 'monitor', None)
+        if monitor is not None and monitor.thread is not None:
+            self.window.after(50, self.wait_for_monitor)
+            return
+        self.button.configure(state='normal')
+        self.toggle()
+
+    def process(self, audio, cleaned=None):
         started = time.perf_counter()
         try:
-            text = self.model.transcribe(audio, self.source)
+            from audio_cleanup import clean_audio
+            if cleaned is None:
+                cleaned = clean_audio(audio, **self.session_noise)
+            if self.cancel.is_set():
+                return
+            self.events.put(('audio', (audio, cleaned)))
+            if not self.session_text:
+                state = 'on' if self.session_noise['enabled'] else 'off'
+                self.events.put(('done', f'Ready to listen. Noise suppression: {state}. Nothing sent.'))
+                return
+            self.model = getattr(self.app, 'speech_model', None) or LocalTranscriber()
+            text = self.model.transcribe(cleaned, self.source)
             if self.cancel.is_set():
                 return
             self.events.put(('original', text))
             recognized = time.perf_counter() - started
+            if self.source != self.target and self.app.local is None:
+                self.events.put(('done', 'Recording and speech recognition finished. Luna is not connected; translation skipped.'))
+                return
             translated = text if self.source == self.target else self.app.local.translate(
                 text, target_language=self.target, source_language=self.source)
             if not self.cancel.is_set():
@@ -113,21 +177,31 @@ class VoiceTrial:
     def finish(self, message):
         self.status.set(message)
         self.device.configure(state='readonly')
-        self.button.configure(text='Start recording', state='normal' if self.model else 'disabled')
+        self.button.configure(text='Start recording', state='normal')
+        self.noise_option.configure(state='normal')
+        self.draw_levels()
+        if self.raw_audio is not None:
+            self.play_original.configure(state='normal')
+            self.play_filtered.configure(state='normal')
         if self.owns_busy:
             self.app.busy = self.owns_busy = False
 
     def poll(self):
         if self.closed:
             return
+        readings = []
+        while not self.recorder.levels.empty():
+            readings.append(self.recorder.levels.get())
+        if readings:
+            self.reading = tuple(max(r[i] for r in readings) for i in (0, 1))
+            self.draw_levels()
         if self.recording and self.recorder.full.is_set():
             self.toggle()
         try:
             while True:
                 kind, value = self.events.get_nowait()
-                if kind == 'model':
-                    self.model = self.app.speech_model = value
-                    self.finish('Ready. Click Start recording and speak in your selected source language.')
+                if kind == 'audio':
+                    self.raw_audio, self.filtered_audio = value
                 elif kind in ('error', 'done'):
                     self.finish(value)
                 elif kind in ('original', 'output'):
@@ -138,6 +212,8 @@ class VoiceTrial:
 
     def close(self):
         self.cancel.set()
+        self.stop_playback()
+        self.raw_audio = self.filtered_audio = None
         self.recorder.close()
         self.recorder.chunks.clear()
         self.closed = True
@@ -166,6 +242,8 @@ class VoiceTrial:
 def show_voice_trial(app):
     existing = getattr(app, 'voice_trial', None)
     if existing is not None and not existing.closed:
+        existing.window.deiconify()
         existing.window.lift()
+        existing.window.focus_force()
         return
     app.voice_trial = VoiceTrial(app)

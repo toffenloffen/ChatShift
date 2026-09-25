@@ -13,7 +13,7 @@ names too. Recognition quality still needs testing with your voice and game audi
 Focus changes, other input, pause or closing cancel pending delivery. The recorder has a 30-second limit.
 Automatic sending requires a verified readback and never sends on a failed verification.
 
-The Voice tab also offers **Microphone test → Open test**. Run **Install ChatShift.cmd** first. Setup installs dependencies and downloads
+The Voice tab also offers **Speech and translation test → Test translation**. Run **Install ChatShift.cmd** first. Setup installs dependencies and downloads
 the multilingual Whisper small model; it loads on first use and runs
 on the CPU with four threads; no NVIDIA GPU or speech API key is required.
 Recordings begin only after clicking Start recording, stop after at most 30 seconds,
@@ -24,6 +24,32 @@ with useful results and some mistakes; other speakers and dialects still need te
 Microphone selection is available; close the test to cancel and release the device.
 Standard setup includes voice dependencies and the model. Recording remains off until enabled.
 Windows is the current test platform; SteamOS microphone and game integration are untested.
+
+## Optional noise suppression and testing
+
+Enable **Noise suppression (DeepFilterNet3)** in Voice to filter microphone audio
+locally before Whisper. Setup downloads and checks the noise-suppression model.
+The setting is saved and uses a fixed preset; no manual threshold adjustment is required.
+Turning it off bypasses the filter.
+
+**Mic Test** opens the microphone only after you click it. Input and Output measure
+actual audio before and after filtering. **Listen (headphones)** is off by default;
+turn it on to hear the output and toggle suppression during the test. Click **Stop Test**
+to finish, or let the two-minute safety limit stop it. This test does not transcribe,
+translate, or save audio.
+
+**Test translation** opens the separate recording test. Start recording, speak, then
+Stop recording to see the recognized text and its translation. The test stops an active
+Mic Test before taking the microphone. The original and processed recording remain in
+memory for explicit playback until another recording or closing. Whisper receives the
+processed version, using the same filter as Mic Test. Normal voice shortcuts also use
+DeepFilterNet before recognition. No microphone audio is uploaded by the filter.
+
+The creator reports successful manual testing on their own setup. Results depend on
+the microphone and room: singing, game dialogue and other voices can still get through.
+This filter does not identify a particular speaker. Review the transcription separately
+from the translation, especially negations and numbers. The experimental extra postfilter
+is not included in this release.
 
 ## Intended user experience
 
