@@ -91,7 +91,8 @@ class VoiceInput:
         ttk.Label(parent, text='Click to select. Click again to remove.\nFor a combo: hold right mouse, click each button with left mouse, then release right mouse.',
                   wraplength=600).pack(anchor='w')
         ttk.Label(parent, text='Microphone', font=('Segoe UI', 10, 'bold')).pack(anchor='w', pady=(12, 0))
-        self.device_picker = ttk.Combobox(parent, textvariable=self.device, values=list(self.devices), state='readonly')
+        self.device_picker = ttk.Combobox(parent, textvariable=self.device, values=list(self.devices),
+                                         state='readonly', postcommand=self.refresh_microphones)
         self.device_picker.pack(fill='x', pady=8)
         self.device_picker.bind('<<ComboboxSelected>>', lambda event: self.abort('Microphone changed.'))
         cleanup = tk.Frame(parent, bg=parent.cget('background'))
@@ -101,6 +102,19 @@ class VoiceInput:
         from mic_monitor import MicMonitor
         self.monitor = MicMonitor(self, cleanup)
         ttk.Label(parent, textvariable=self.hint, wraplength=600).pack(anchor='w', pady=8)
+
+    def refresh_microphones(self):
+        if self.recording or self.processing or self.app.busy:
+            return
+        try:
+            from microphones import list_microphones
+            choices = list_microphones()
+            self.devices = choices
+            self.device_picker.configure(values=list(choices))
+            if self.device.get() not in choices:
+                self.device.set(next(iter(choices)))
+        except Exception:
+            self.hint.set('Could not list microphones. Check Windows audio settings and restart ChatShift.')
 
     def noise_options(self):
         return dict(enabled=self.noise_enabled.get(), strength=100,

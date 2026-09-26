@@ -15,9 +15,10 @@ Using a controller? See [controller setup](CONTROLLERS.md).
 1. Double-click **ChatShift-Setup.exe** and follow the Windows installer. It installs
    only for your Windows account, with Start Menu and desktop shortcuts.
    You do not need to install Python, extract a ZIP or keep a source folder.
-2. Choose **Set up ChatShift** in the welcome window. Everything is prepared together. Internet is required for the
-   Whisper small and DeepFilterNet3 models (about 500 MB). Progress shows the current
-   step; downloads can take several minutes. Setup does not record the microphone.
+2. Choose **Download and set up** in the welcome window to approve the downloads.
+   It names the sources: Hugging Face for Whisper small and GitHub for DeepFilterNet3
+   (about 500 MB total). Progress shows downloaded MB and percent for each file;
+   downloads can take several minutes. Setup does not record the microphone.
 3. If Codex is not ready, use **Setup** in ChatShift to install/open Codex and sign in with your
    own ChatGPT account. ChatShift cannot authenticate you. Your account needs Codex
    access; account usage limits apply. No API key or prompt is needed.

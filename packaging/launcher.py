@@ -14,18 +14,21 @@ from app_paths import DATA, MODELS
 # Public model downloads use ChatShift's cache and never inherit a saved Hub token.
 os.environ['HF_HOME'] = str(MODELS / 'huggingface')
 os.environ['HF_HUB_DISABLE_IMPLICIT_TOKEN'] = '1'
+# Use the ordinary HTTP downloader so setup can show actual received bytes.
+os.environ['HF_HUB_DISABLE_XET'] = '1'
 
 
-def prepare_models(report):
+def prepare_models(report, progress=None):
     # Use a dedicated cache, never the developer's or another application's cache.
-    from deepfilter_stream import assets
-    report('Step 1 of 2 · Getting noise suppression ready…')
+    from model_setup import prepare_downloads
+    report('Downloading voice and noise suppression files…')
     os.environ.pop('DEEPFILTER_STREAM_MODEL_DIR', None)
-    paths = assets.ensure_assets(str(MODELS / 'deepfilter'))
-    os.environ['DEEPFILTER_STREAM_MODEL_DIR'] = str(paths['onnx'].parent)
-    report('Step 2 of 2 · Getting voice ready… This may take a few minutes.')
+    folder = prepare_downloads(MODELS, progress or (lambda *args: None))
+    os.environ['DEEPFILTER_STREAM_MODEL_DIR'] = str(folder)
+    report('Downloads complete. Checking voice recognition…')
     from local_voice import LocalTranscriber
     LocalTranscriber()
+    report('Checking noise suppression…')
     from audio_cleanup import clean_audio
     import numpy as np
     clean_audio(np.zeros(1600, dtype=np.float32), enabled=True)
@@ -68,37 +71,51 @@ def self_test(models=False):
 def welcome():
     root = tk.Tk()
     root.title('Welcome to ChatShift')
-    root.geometry('600x330')
-    root.minsize(600, 330)
+    root.geometry('640x460')
+    root.minsize(640, 460)
     root.iconbitmap(str(Path(__file__).parent / 'assets' / 'chatshift.ico'))
     frame = ttk.Frame(root, padding=28); frame.pack(fill='both', expand=True)
     ttk.Label(frame, text='Your words. More worlds.', font=('Segoe UI', 21)).pack(anchor='w')
     ttk.Label(frame, text='Text and voice · 26 languages', font=('Segoe UI', 12)).pack(anchor='w', pady=(6, 20))
-    ttk.Label(frame, wraplength=540, justify='left', text='One setup gets everything ready: text, voice and noise suppression.\nRequires internet and downloads about 500 MB.').pack(anchor='w')
-    status = tk.StringVar(value='ChatShift will open automatically when setup is finished.')
+    ttk.Label(frame, wraplength=580, justify='left', text='Download voice files · about 500 MB, once\n\nWhisper voice recognition from Hugging Face (Systran).\nDeepFilterNet3 noise suppression from GitHub (deepfilter-stream).\n\nThese files run on your PC. Setup does not record your microphone.\nChoose Download and set up to allow these internet downloads.').pack(anchor='w')
+    status = tk.StringVar(value='Ready to download. ChatShift will open when setup is complete.')
     ttk.Label(frame, textvariable=status, wraplength=540, justify='left').pack(anchor='w', pady=(20, 8))
-    progress = ttk.Progressbar(frame, mode='indeterminate'); progress.pack(fill='x')
+    detail = tk.StringVar(value='')
+    ttk.Label(frame, textvariable=detail, wraplength=580).pack(anchor='w', pady=(0, 6))
+    progress = ttk.Progressbar(frame, mode='determinate', maximum=100); progress.pack(fill='x')
     events = queue.Queue(); result = [False]; busy = [False]
     row = ttk.Frame(frame); row.pack(fill='x', pady=18)
     def launch():
         result[0] = True; root.destroy()
     def work():
         try:
-            prepare_models(lambda text: events.put(('status', text)))
+            prepare_models(lambda text: events.put(('status', text)),
+                           lambda name, done, total: events.put(('progress', (name, done, total))))
             events.put(('done', 'ChatShift is ready. Opening…'))
         except Exception:
             (DATA / 'setup-error.log').write_text(traceback.format_exc(), encoding='utf-8')
             events.put(('error', 'Setup could not finish. Check your internet connection and free disk space, then try again.'))
     def start():
-        busy[0] = True; button.config(state='disabled', text='Setting up…')
-        progress.start(); threading.Thread(target=work, daemon=True).start()
-    button = ttk.Button(row, text='Set up ChatShift', command=start); button.pack(side='left')
+        busy[0] = True; button.config(state='disabled', text='Downloading…')
+        progress['value'] = 0
+        threading.Thread(target=work, daemon=True).start()
+    button = ttk.Button(row, text='Download and set up', command=start); button.pack(side='left')
     def poll():
         try:
             while True:
-                kind, text = events.get_nowait(); status.set(text)
+                kind, text = events.get_nowait()
+                if kind == 'progress':
+                    from model_setup import progress_text
+                    name, done, total = text
+                    status.set(name)
+                    message, percent = progress_text(done, total)
+                    detail.set(message + ' · current file')
+                    progress['value'] = percent
+                    continue
+                status.set(text)
+                detail.set('')
                 if kind != 'status':
-                    busy[0] = False; progress.stop()
+                    busy[0] = False
                     if kind == 'done':
                         launch()
                         return
@@ -109,6 +126,7 @@ def welcome():
     def close():
         if not busy[0] or messagebox.askyesno('Stop setup?', 'Stop the download and close ChatShift? You can retry next time.'):
             root.destroy()
+    ttk.Button(row, text='Cancel', command=close).pack(side='right')
     root.protocol('WM_DELETE_WINDOW', close)
     poll(); root.mainloop()
     return result[0]

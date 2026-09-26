@@ -25,7 +25,7 @@ when writing in another language is difficult.
 No ZIP extraction or separate Python installation is needed.
 
 1. Open **ChatShift-Setup.exe** and follow the installer.
-2. Click **Set up ChatShift**. It prepares everything together, including the voice models.
+2. Click **Download and set up** to approve the model downloads. Progress shows MB and percent.
 3. Sign in to Codex with your own ChatGPT account if prompted, then choose your
    languages and shortcuts in ChatShift.
 
