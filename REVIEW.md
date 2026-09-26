@@ -27,7 +27,7 @@ not an independent security audit or a guarantee of compatibility with every app
   Successful runs do not establish reliability in other applications or games.
 - A repeated identical message returned the cached translation with no additional model call.
 - Source candidates were scanned for common API-key/token/private-key patterns and the
-  developer's absolute home-directory path; no matches were found. Environment, model,
+  local absolute home-directory path; no matches were found. Environment, model,
   status and preference files are ignored by Git. Pattern scanning cannot prove absence
   of every possible secret.
 - Setup PowerShell syntax validated. GitHub Actions is configured, but has not run on GitHub.
@@ -43,7 +43,7 @@ not an independent security audit or a guarantee of compatibility with every app
   request and preserves the existing model, prompt, effort, cache and rotation limit.
   If preparation fails, reconnect on the next translation without retrying delivery.
 - 62 offline tests pass. Real game latency and reliability have not been remeasured;
-  joint testing with the user is pending. No large speedup is claimed.
+  further manual game testing is pending. No large speedup is claimed.
 
 Observed new requests used approximately **3,992–4,707 input tokens**, of which **0–3,840
 were reported as cached**, and around **16–30 output tokens**. The fixed Codex context is
@@ -67,8 +67,8 @@ validation happens after generation, and a failed request may still consume allo
 
 - The experimental Among Us OCR adapter passed a short in-place replacement test (2.30s)
   and a separate automatic-send test (2.39s) in a 2560×1440 local lobby. All 59 offline
-  tests passed. A later user attempt failed to identify the chat field/counter, so
-  Among Us support is not yet reliable. WoW worked according to the user, with chat
+  tests passed. In my later attempt, the app failed to identify the chat field/counter, so
+  Among Us support is not yet reliable. WoW worked in my tests, with chat
   remaining focused during translation. Longer messages and other layouts remain unverified; see
   [COMPATIBILITY.md](COMPATIBILITY.md). Do not advertise universal game compatibility.
 - Clipboard contents are overwritten. A supported text field is required.
@@ -103,7 +103,7 @@ worker start to observing the field Return handler. Translation/backend time was
 The second backend breakdown was: lock 0 ms, session preparation 0 ms, request
 acknowledgement 1.7 ms, generation/network 1058.9 ms, completion processing 17.4 ms.
 These two runs identify backend response latency as the largest measured component;
-they do not isolate network from model computation or reproduce the user's exact
+they do not isolate network from model computation or reproduce my exact
 three-second observation in Codex chat.
 
 The live app now timestamps shortcut interception and records stage offsets and
@@ -118,5 +118,5 @@ All 64 offline tests passed after instrumentation. Model and prompts are unchang
 shortcuts, keyboard selection, settings, translation and text transaction handling.
 The selected tests mock input delivery and do not type into the user's active game.
 The full input-injection suite was not rerun during the active gaming session.
-Manual voice insertion in Valheim was confirmed by the user. This is a limited
+I confirmed manual voice insertion in Valheim in my own testing. This is a limited
 preview validation, not a security audit or a guarantee for every PC and game.

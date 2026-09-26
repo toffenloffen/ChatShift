@@ -45,7 +45,7 @@ memory for explicit playback until another recording or closing. Whisper receive
 processed version, using the same filter as Mic Test. Normal voice shortcuts also use
 DeepFilterNet before recognition. No microphone audio is uploaded by the filter.
 
-The creator reports successful manual testing on their own setup. Results depend on
+In my manual tests, noise suppression worked well on my setup. Results depend on
 the microphone and room: singing, game dialogue and other voices can still get through.
 This filter does not identify a particular speaker. Review the transcription separately
 from the translation, especially negations and numbers. The experimental extra postfilter

@@ -8,7 +8,7 @@ switching to a translation window.
 
 **Tested with a free ChatGPT account — no API key or separate API billing needed.**
 
-Created by **[toffenloffen](https://github.com/toffenloffen)** to make chatting easier
+I'm **[toffenloffen](https://github.com/toffenloffen)**. I created ChatShift to make chatting easier
 when writing in another language is difficult.
 
 ## Watch ChatShift in action

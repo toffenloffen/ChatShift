@@ -39,14 +39,14 @@ provides the local recognition service.
 
 ## Follow-up reports
 
-The user subsequently reported another Among Us attempt doing nothing. The runtime status
+In a later Among Us test, I tried again and nothing happened. The runtime status
 reported that the chat field and character counter could not be identified. The earlier
 short successful tests therefore do not establish reliable Among Us support.
 
 ## World of Warcraft and other games
 
-The user reported successful translation in WoW with the standard clipboard adapter.
+In my WoW tests, translation worked with the standard clipboard adapter.
 Chat remains open during translation, preventing normal movement using typing keys.
 This behavior is intentionally retained. The exact WoW version and configuration were
-not recorded; this is a user report, not an independently repeated integration test.
+not recorded; this describes my own experience, not an independently repeated integration test.
 Other games still require individual testing. Universal compatibility is not claimed.
