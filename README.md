@@ -9,6 +9,12 @@ switching to a translation window.
 Created by **[toffenloffen](https://github.com/toffenloffen)** to make chatting easier
 when writing in another language is difficult.
 
+## Watch ChatShift in action
+
+[![Watch the ChatShift video demo on YouTube](https://img.youtube.com/vi/qVZ6KIvjux8/hqdefault.jpg)](https://youtu.be/qVZ6KIvjux8)
+
+**[▶ Watch the demo on YouTube](https://youtu.be/qVZ6KIvjux8)** — see text and voice translation in game chat.
+
 ## Download and get started
 
 **[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Setup.exe)**
@@ -25,7 +31,7 @@ First-time setup downloads about **500 MB** of voice models. Translation require
 internet access and a ChatGPT account with Codex access; your account's usage limits
 apply. No API key is needed.
 
-**[Watch the demo](https://youtu.be/qVZ6KIvjux8)** · [Setup help](GET_STARTED.md)
+[Setup help](GET_STARTED.md)
 
 ## What you can do
 
