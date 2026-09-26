@@ -24,6 +24,10 @@ when writing in another language is difficult.
 **New: one Windows installer for text, voice and noise suppression.**
 No ZIP extraction or separate Python installation is needed.
 
+I tested the installer and voice input on my Windows 10 laptop on 26 September 2026,
+and both worked in my setup. This is a personal test on one laptop, not a guarantee
+for every Windows 10 PC.
+
 1. Open **ChatShift-Setup.exe** and follow the installer.
 2. Click **Download and set up** to approve the model downloads. Progress shows MB and percent.
 3. Sign in to Codex with your own ChatGPT account if prompted, then choose your
