@@ -37,13 +37,13 @@ apply. No API key is needed.
 
 ## How much can you chat on a free account?
 
-In the creator's test on **26 September 2026**, a new **free ChatGPT account**
-handled **34 translated messages — 479 words over about 39 minutes** while chatting
-on Twitch and with Google AI. The displayed remaining allowance went from **100% to 99%**.
+In my test on **26 September 2026**, I used a new **free ChatGPT account**
+to translate **34 messages — 479 words over about 39 minutes** while chatting
+on Twitch and with Google AI. My displayed remaining allowance went from **100% to 99%**.
 The message and word counts exclude ChatShift's automatic warmup request.
 
-At that rate, a rough estimate for a full allowance is **48,000 words, 3,400 messages,
-or 65 hours at the same writing pace**. These are projections from this test,
+At that rate, my rough estimate for a full allowance is **48,000 words, 3,400 messages,
+or 65 hours at the same writing pace**. These are projections from my test,
 not guaranteed limits or a daily allowance. Free-account Codex access and usage limits
 depend on OpenAI's current availability and account limits.
 
