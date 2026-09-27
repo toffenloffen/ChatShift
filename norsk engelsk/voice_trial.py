@@ -4,8 +4,8 @@ import threading
 import time
 import tkinter as tk
 from tkinter import ttk
-from cloud_voice import CloudTranscriber
-from audio_recorder import Recorder
+from realtime_adapter import RealtimeTranscriber
+from realtime_adapter import LiveRecorder
 
 
 class VoiceTrial:
@@ -14,8 +14,10 @@ class VoiceTrial:
         self.closed = False
         self.recording = False
         self.model = None
-        from filtered_recorder import FilteredRecorder
-        self.recorder = FilteredRecorder()
+        self.recorder = LiveRecorder(app.voice.source_language.get(), {}, threading.Event())
+        self.model = getattr(app, 'speech_model', None) or RealtimeTranscriber()
+        app.speech_model = self.model
+        self.model.warm(app.voice.source_language.get(), app.voice.noise_options())
         self.events = queue.Queue()
         self.cancel = threading.Event()
         self.owns_busy = False
@@ -65,7 +67,7 @@ class VoiceTrial:
         ttk.Label(body, text='Luna translation · review only').pack(anchor='w')
         self.output = tk.Text(body, height=4, wrap='word', bg='#1b1e2e', fg='#f2f3ff', insertbackground='white')
         self.output.pack(fill='x', pady=5)
-        ttk.Label(body, text='Noise suppression runs locally. Audio is uploaded to OpenAI after Stop when transcription is enabled.\nRecording stops automatically after 30 seconds.', wraplength=640).pack(anchor='w', pady=8)
+        ttk.Label(body, text='Noise suppression runs locally. Audio is sent to OpenAI while you record.\nRecording stops automatically after 30 seconds. Playback stays in memory until the next recording or closing this window.', wraplength=640).pack(anchor='w', pady=8)
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = self.window.after(50, self.poll)
 
@@ -85,21 +87,22 @@ class VoiceTrial:
         audio = self.filtered_audio if filtered else self.raw_audio
         if audio is not None and not self.recording:
             try:
-                sd.play(audio, Recorder.RATE)
+                sd.play(audio, LiveRecorder.RATE)
             except Exception:
                 self.status.set('Could not play audio. Check your output device.')
 
     def toggle(self):
         if self.recording:
+            self.stopped_at = time.perf_counter()
             self.recording = False
             self.button.configure(state='disabled', text='Processing…')
             try:
-                audio, cleaned = self.recorder.stop()
+                audio = self.recorder.stop()
             except ValueError as exc:
                 self.finish(str(exc))
                 return
-            self.status.set('Preparing recording for cloud dictation…')
-            threading.Thread(target=self.process, args=(audio, cleaned), daemon=True).start()
+            self.status.set('Finishing live speech…')
+            threading.Thread(target=self.process, args=(audio,), daemon=True).start()
             return
         monitor = getattr(self.app.voice, 'monitor', None)
         if monitor is not None and monitor.thread is not None:
@@ -113,11 +116,14 @@ class VoiceTrial:
             return
         self.session_noise = self.app.voice.noise_options()
         self.session_text = True
-        self.source = self.app.source_language.get()
-        self.target = self.app.language.get()
+        self.source = self.app.voice.source_language.get()
+        self.target = self.app.voice.target_language.get()
+        self.cancel = threading.Event()
+        self.recorder = self.model.recorder(self.source, self.session_noise, self.cancel)
+        self.recorder.keep_audio = True
         try:
             self.stop_playback()
-            self.recorder.start(self.devices[self.device.current()], self.session_noise['enabled'])
+            self.recorder.start(self.devices[self.device.current()])
         except ValueError as exc:
             self.status.set(str(exc))
             return
@@ -143,24 +149,16 @@ class VoiceTrial:
         self.button.configure(state='normal')
         self.toggle()
 
-    def process(self, audio, cleaned=None):
-        started = time.perf_counter()
+    def process(self, audio):
+        started = self.stopped_at
         try:
-            from audio_cleanup import clean_audio
-            if cleaned is None:
-                cleaned = clean_audio(audio, **self.session_noise)
             if self.cancel.is_set():
                 return
-            self.events.put(('audio', (audio, cleaned)))
-            if not self.session_text:
-                state = 'on' if self.session_noise['enabled'] else 'off'
-                self.events.put(('done', f'Ready to listen. Noise suppression: {state}. Nothing sent to your game.'))
-                return
-            self.model = getattr(self.app, 'speech_model', None) or CloudTranscriber()
-            text = self.model.transcribe(cleaned, self.source, cancel=self.cancel)
+            text = self.model.transcribe(audio, self.source, cancel=self.cancel)
             if self.cancel.is_set():
                 return
             self.events.put(('original', text))
+            self.events.put(('audio', audio.playback()))
             recognized = time.perf_counter() - started
             if self.source != self.target and self.app.local is None:
                 self.events.put(('done', 'Recording and speech recognition finished. Luna is not connected; translation skipped.'))
@@ -168,10 +166,12 @@ class VoiceTrial:
             translated = text if self.source == self.target else self.app.local.translate(
                 text, target_language=self.target, source_language=self.source)
             if not self.cancel.is_set():
+                self.events.put(('timing', dict(audio.timings, transcription_wait_ms=round(recognized*1000,1))))
                 self.events.put(('output', translated))
                 self.events.put(('done', f'Ready · recognition {recognized:.1f}s · total {time.perf_counter()-started:.1f}s. Nothing sent to your game.'))
         except Exception as exc:
-            self.events.put(('error', str(exc) if isinstance(exc, ValueError) else 'Voice processing failed. Try another short recording.'))
+            if not self.cancel.is_set():
+                self.events.put(('error', str(exc) if isinstance(exc, ValueError) else 'Voice processing failed. Try another short recording.'))
         finally:
             self.events.put(('released', None))
 
@@ -207,6 +207,20 @@ class VoiceTrial:
                     self.finish(value)
                 elif kind in ('original', 'output'):
                     getattr(self, kind).insert('1.0', value)
+                    if kind == 'output':
+                        import json
+                        from pathlib import Path
+                        timing = dict(self.last_timing, source='test_window',
+                            total_after_stop_ms=round((time.perf_counter()-self.stopped_at)*1000,1))
+                        timing['translation_and_display_ms']=round(timing['total_after_stop_ms']-timing['transcription_wait_ms'],1)
+                        try:
+                            (Path(__file__).parent / '.runtime' / 'voice-timing.json').write_text(json.dumps(timing),encoding='utf-8')
+                        except OSError:pass
+                elif kind == 'timing':
+                    self.last_timing = value
+                elif kind == 'released':
+                    if not self.closed and not self.app.closing:
+                        self.model.warm(self.app.voice.source_language.get(), self.app.voice.noise_options())
         except queue.Empty:
             pass
         self.timer = self.window.after(50, self.poll)
@@ -217,6 +231,7 @@ class VoiceTrial:
         self.raw_audio = self.filtered_audio = None
         self.recorder.close()
         self.recorder.chunks.clear()
+        self.recorder.raw_chunks.clear();self.recorder.filtered_chunks.clear()
         self.closed = True
         self.window.after_cancel(self.timer)
         self.window.destroy()

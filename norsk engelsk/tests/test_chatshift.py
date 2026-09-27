@@ -123,6 +123,11 @@ class InputTests(unittest.TestCase):
             read.assert_not_called()
 
     def test_single_instance_guard(self):
+        original = win.kernel32.CreateMutexW
+        unique = "Local\\ChatShift.Test." + str(__import__("os").getpid())
+        replacement = patch.object(win.kernel32, "CreateMutexW", side_effect=lambda a,b,c: original(a,b,unique))
+        replacement.start()
+        self.addCleanup(replacement.stop)
         first = win.acquire_instance()
         self.assertIsNotNone(first)
         try:

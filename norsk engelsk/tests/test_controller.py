@@ -97,12 +97,12 @@ class ControllerDispatchTests(unittest.TestCase):
         self.app.trigger.assert_not_called()
 
     def test_voice_disconnect_aborts_without_finish(self):
-        def start(*args):
+        def start(*args, **kwargs):
             self.app.voice.recording = True
         self.app.voice.hotkey.side_effect = start
         self.step({'RB'})
         self.step(None)
-        self.app.voice.hotkey.assert_called_once_with('down', (123, 456), 7)
+        self.app.voice.hotkey.assert_called_once_with('down', (123, 456), 7, languages=(self.controller.source_language.get(), self.controller.target_language.get()))
         self.app.voice.abort.assert_called()
 
     def test_gamepad_cannot_stop_keyboard_recording(self):

@@ -9,7 +9,7 @@ class SettingsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'settings.json'
             save_settings('French', False, path)
-            self.assertEqual(load_settings(path), {'source_language': 'Norwegian', 'target_language': 'French', 'auto_send': False, 'shortcut': None, 'text_enabled': True,
+            self.assertEqual(load_settings(path), {'source_language': 'Norwegian', 'target_language': 'French', 'auto_send': False, 'voice_source_language': 'Norwegian', 'voice_target_language': 'French', 'shortcut': None, 'text_enabled': True,
                 'voice_shortcut': {'modifiers': [], 'key': None}, 'voice_enabled': False, 'voice_mode': 'hold', 'voice_auto_send': False,
                 'noise_enabled': False, 'noise_strength': 50, 'noise_threshold': -50})
 

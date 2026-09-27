@@ -24,10 +24,9 @@
 
 ## Privacy and usage
 
-Text captured by the translation shortcut and completed cloud voice recordings are sent to OpenAI. In Among Us, a visible
+Text captured by the translation shortcut and streaming microphone audio are sent to OpenAI. In Among Us, a visible
 game frame is captured in memory and cropped to the outgoing field and character counter
-for local Windows OCR. Images are not saved or uploaded; incoming chat is not translated. Codex manages sign-in. Cloud dictation receives a credential through its app-server
-and uses it only in memory for the fixed ChatGPT HTTPS endpoint; it is never logged or saved. Its app-server connection uses local stdin/stdout pipes, not an open network port.
+for local Windows OCR. Images are not saved or uploaded; incoming chat is not translated. Codex manages sign-in. Realtime voice uses managed Codex app-server WebRTC; ChatShift does not extract credentials. Local app-server commands use stdin/stdout pipes.
 The OpenAI service processes the text according to your account's data settings.
 
 Recent messages and translations exist in memory: a model session is rotated after five

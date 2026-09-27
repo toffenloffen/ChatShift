@@ -51,6 +51,8 @@ def insert_draft(target, revision, text, owner, cancel, binding, send=False):
 class VoiceInput:
     def __init__(self, app, saved):
         self.app = app
+        self.source_language = tk.StringVar(value=saved.get('voice_source_language', app.source_language.get()))
+        self.target_language = tk.StringVar(value=saved.get('voice_target_language', app.language.get()))
         self.enabled = tk.BooleanVar(value=saved.get('voice_enabled', False) and saved.get('voice_backend') == 'cloud')
         self.noise_enabled = tk.BooleanVar(value=saved.get('noise_enabled', False))
         self.noise_strength = tk.DoubleVar(value=saved.get('noise_strength', 50))
@@ -97,7 +99,7 @@ class VoiceInput:
         self.device_picker.bind('<<ComboboxSelected>>', lambda event: self.abort('Microphone changed.'))
         cleanup = tk.Frame(parent, bg=parent.cget('background'))
         cleanup.pack(fill='x', pady=8)
-        ttk.Label(cleanup, text='Cloud dictation · audio is sent to OpenAI when you finish.\nExperimental · ChatGPT sign-in and internet required; account limits apply.', wraplength=600).pack(anchor='w')
+        ttk.Label(cleanup, text='Cloud dictation · audio is sent to OpenAI while you speak.\nExperimental · ChatGPT sign-in and internet required; account limits apply.', wraplength=600).pack(anchor='w')
         ttk.Checkbutton(cleanup, text='Noise suppression (DeepFilterNet3)', variable=self.noise_enabled,
                         command=self.noise_changed).pack(anchor='w')
         from mic_monitor import MicMonitor
@@ -120,6 +122,14 @@ class VoiceInput:
     def noise_options(self):
         return dict(enabled=self.noise_enabled.get(), strength=100,
                     threshold=self.noise_threshold.get(), apply_gate=False)
+
+    def languages_changed(self, event=None):
+        self.abort('Voice languages changed.')
+        self.app.preferences_changed()
+        if self.model and not self.app.busy:
+            self.model.warm(self.source_language.get(), self.noise_options())
+        source, target = self.source_language.get(), self.target_language.get()
+        self.hint.set(f'Voice: {source} → {target}.' + (' Transcription only; no translation.' if source == target else ''))
 
     def noise_changed(self, event=None):
         self.app.preferences_changed()
@@ -203,10 +213,10 @@ class VoiceInput:
         self.hint.set('Connecting cloud voice through your ChatGPT sign-in…')
         def work():
             try:
-                from cloud_voice import CloudTranscriber
+                from realtime_adapter import RealtimeTranscriber
                 from microphones import list_microphones
                 devices = list_microphones()
-                model = getattr(self.app, 'speech_model', None) or CloudTranscriber()
+                model = getattr(self.app, 'speech_model', None) or RealtimeTranscriber()
                 self.events.put(('ready', (model, devices)))
             except ImportError:
                 self.events.put(('load_error', 'Voice setup is incomplete. Run Install ChatShift.cmd, then restart ChatShift.'))
@@ -214,7 +224,7 @@ class VoiceInput:
                 self.events.put(('load_error', 'Could not prepare cloud voice. Check Codex sign-in, internet and microphone setup.'))
         threading.Thread(target=work, daemon=True).start()
 
-    def hotkey(self, kind, target, revision):
+    def hotkey(self, kind, target, revision, languages=None):
         if kind == 'up':
             if self.recording and self.session_mode == 'hold':
                 self.finish_recording()
@@ -228,15 +238,14 @@ class VoiceInput:
         from audio_recorder import Recorder
         self.target = target
         self.revision = revision
-        self.source = self.app.source_language.get()
-        self.destination = self.app.language.get()
+        self.source, self.destination = languages or (self.source_language.get(), self.target_language.get())
         self.session_mode = self.mode.get()
         self.session_send = self.auto_send.get()
         self.session_noise = self.noise_options()
         self.session_binding = dict(self.binding)
         self.owner = self.app.root.winfo_id()
         self.cancel = threading.Event()
-        self.recorder = Recorder()
+        self.recorder = self.model.recorder(self.source, self.session_noise, self.cancel)
         try:
             self.recorder.start(self.devices.get(self.device.get()))
         except ValueError as exc:
@@ -260,18 +269,18 @@ class VoiceInput:
             return
         self.processing = True
         self.app.badge.set('TRANSCRIBING')
-        self.app.status.set('Recognizing speech in the cloud… stay in the same chat field.')
+        self.app.status.set('Finishing live speech… stay in the same chat field.')
         cancel = self.cancel
         def work():
             started = time.perf_counter()
             try:
                 if cancel.is_set():
                     return
-                from audio_cleanup import clean_audio
-                cleaned = clean_audio(audio, **self.session_noise)
+                cleaned = audio  # Streaming recorder already applied DeepFilter.
                 if cancel.is_set():
                     return
                 text = self.model.transcribe(cleaned, self.source, cancel=cancel)
+                transcript_at = time.perf_counter()
                 if cancel.is_set():
                     return
                 if len(text) > 1000:
@@ -281,6 +290,17 @@ class VoiceInput:
                 if cancel.is_set():
                     return
                 insert_draft(self.target, self.revision, result, self.owner, cancel, self.session_binding, self.session_send)
+                # Durations only: never persist the recording or its text.
+                try:
+                    import json
+                    from pathlib import Path
+                    timing = dict(getattr(audio, 'timings', {}))
+                    timing.update(transcription_wait_ms=round((transcript_at-started)*1000,1),
+                        translation_and_insert_ms=round((time.perf_counter()-transcript_at)*1000,1),
+                        total_after_stop_ms=round((time.perf_counter()-started)*1000,1))
+                    (Path(__file__).parent / '.runtime' / 'voice-timing.json').write_text(json.dumps(timing), encoding='utf-8')
+                except OSError:
+                    pass
                 ending = 'Enter sent.' if self.session_send else 'Check the field and send it yourself.'
                 self.events.put(('done', f'Voice · {time.perf_counter()-started:.1f}s. {ending}'))
             except Exception as exc:
@@ -324,6 +344,7 @@ class VoiceInput:
                 if kind == 'ready':
                     self.model, self.devices = value
                     self.app.speech_model = self.model
+                    self.model.warm(self.source_language.get(), self.noise_options())
                     self.loading = False
                     self.device_picker.configure(values=list(self.devices))
                     if self.device.get() not in self.devices:
@@ -345,5 +366,7 @@ class VoiceInput:
                         self.app.badge.set('READY' if kind == 'done' else 'NEEDS ATTENTION')
                 elif kind == 'released':
                     self.processing = self.app.busy = False
+                    if self.enabled.get() and self.app.registered and not getattr(self.app, 'closing', False):
+                        self.model.warm(self.source_language.get(), self.noise_options())
         except queue.Empty:
             pass

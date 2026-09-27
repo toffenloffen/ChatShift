@@ -1,61 +1,37 @@
 import queue
 import threading
+import time
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
-import numpy as np
+from unittest.mock import Mock
 from voice_trial import VoiceTrial
 
-
 class VoiceTrialTests(unittest.TestCase):
-    def trial(self, with_text=False):
+    def trial(self):
         trial = VoiceTrial.__new__(VoiceTrial)
         trial.events = queue.Queue()
         trial.cancel = threading.Event()
-        trial.session_noise = dict(enabled=False)
-        trial.session_text = with_text
+        trial.stopped_at = time.perf_counter()
         trial.source, trial.target = 'Norwegian', 'English'
-        trial.app = SimpleNamespace(local=None, speech_model=Mock())
+        trial.model = Mock()
+        trial.model.transcribe.return_value = 'Ikke angrip.'
+        trial.app = SimpleNamespace(local=None)
         return trial
 
-    def test_audio_test_works_without_model_or_translation(self):
+    def test_disconnected_luna_keeps_transcript_and_playback(self):
         trial = self.trial()
-        audio = np.zeros(16000, dtype='float32')
-        with patch('voice_trial.CloudTranscriber', side_effect=AssertionError('must not load')):
-            trial.process(audio)
-        events = list(trial.events.queue)
-        self.assertEqual([kind for kind, _ in events], ['audio', 'done', 'released'])
-        self.assertIs(events[0][1][0], audio)
-        self.assertIs(events[0][1][1], audio)
-        trial.app.speech_model.transcribe.assert_not_called()
+        recording = Mock(timings={})
+        trial.process(recording)
+        self.assertEqual([k for k,v in trial.events.queue], ['original','audio','done','released'])
+        recording.playback.assert_called_once()
 
-    def test_disconnected_luna_keeps_audio_and_transcript(self):
-        trial = self.trial(True)
-        trial.app.speech_model.transcribe.return_value = 'Ikke angrip.'
-        trial.process(np.zeros(16000, dtype='float32'))
-        events = list(trial.events.queue)
-        self.assertEqual([kind for kind, _ in events], ['audio', 'original', 'done', 'released'])
-        self.assertEqual(events[1][1], 'Ikke angrip.')
-
-    def test_speech_failure_still_preserves_playback(self):
-        trial = self.trial(True)
-        trial.app.speech_model.transcribe.side_effect = ValueError('No speech detected.')
-        trial.process(np.zeros(16000, dtype='float32'))
-        self.assertEqual([kind for kind, _ in trial.events.queue], ['audio', 'error', 'released'])
-
-    def test_processed_recording_produces_transcript_then_translation(self):
-        trial = self.trial(True)
+    def test_failed_recognition_reports_error_without_translation(self):
+        trial = self.trial()
+        trial.model.transcribe.side_effect = ValueError('No speech detected.')
         trial.app.local = Mock()
-        trial.app.local.translate.return_value = "Do not attack yet."
-        trial.app.speech_model.transcribe.return_value = 'Ikke angrip ennå.'
-        raw = np.zeros(16000, dtype='float32')
-        filtered = np.ones(16000, dtype='float32') * .01
-        with patch('audio_cleanup.clean_audio', side_effect=AssertionError('must not filter twice')):
-            trial.process(raw, filtered)
-        trial.app.speech_model.transcribe.assert_called_once_with(filtered, 'Norwegian', cancel=trial.cancel)
-        trial.app.local.translate.assert_called_once_with('Ikke angrip ennå.', target_language='English', source_language='Norwegian')
-        events = list(trial.events.queue)
-        self.assertEqual([k for k, _ in events], ['audio', 'original', 'output', 'done', 'released'])
+        trial.process(Mock())
+        self.assertEqual([k for k,v in trial.events.queue], ['error','released'])
+        trial.app.local.translate.assert_not_called()
 
     def test_start_requests_monitor_stop_before_opening_another_microphone(self):
         trial = VoiceTrial.__new__(VoiceTrial)

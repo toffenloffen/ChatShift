@@ -2,9 +2,8 @@
 
 **Write or speak. Press your shortcut. Chat in another language.**
 
-This guide describes the cloud-voice development build. The currently published
-GitHub installer may still use local voice; check its release notes. Cloud voice
-requires internet and ChatGPT sign-in. Free voice access has not been verified.
+This release uses experimental streaming cloud voice. Internet and ChatGPT sign-in
+through Codex are required. Free-account voice access has not been verified.
 For Steam Deck / SteamOS or other Linux systems, see [platform status](STEAMOS.md);
 do not run the Windows installer there.
 
@@ -19,7 +18,7 @@ Using a controller? See [controller setup](CONTROLLERS.md).
    You do not need to install Python, extract a ZIP or keep a source folder.
 2. Read the welcome screen and click **Open ChatShift**. There are no speech models to download.
 3. Sign in to Codex with your own ChatGPT account, then choose your languages and shortcuts.
-4. Enable **Voice input** when you want cloud dictation. Recordings are uploaded to OpenAI when you stop.
+4. Enable **Voice input** when you want cloud dictation. Audio streams to OpenAI while you record.
 
 Updates preserve settings. Voice starts disabled when upgrading from local voice so
 that the change in audio handling is visible before use. Old model files are left
@@ -29,7 +28,7 @@ untouched; the cloud version does not load them.
 
 Wait for the top-right badge to turn green and show **READY**. The translator is connected.
 
-Choose **From** and **To**. These apply to both text and voice. Open **Text → Enable text translation** or **Voice → Enable voice input**.
+Choose **From** and **To** separately in **Text**, **Voice**, and **Controller**. Click the swap arrows to reverse the pair. The speech test uses Voice. Open **Text → Enable text translation** or **Voice → Enable voice input**.
 Both can stay enabled. Select a shortcut in the matching tab:
 
 - **One button:** left-click it in the keyboard or mouse picture.

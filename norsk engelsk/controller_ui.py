@@ -6,6 +6,7 @@ from tkinter import ttk
 import windows_input as win
 from controller_input import BUTTONS, XInput, ChordEdges, validate_chord
 from app_paths import DATA
+from settings import LANGUAGES
 
 
 class ControllerInput:
@@ -32,6 +33,8 @@ class ControllerInput:
                  set(self.bindings['Voice']) <= set(self.bindings['Text']))):
             self.bindings['Voice'] = []
         self.enabled = tk.BooleanVar(value=saved.get('enabled') is True)
+        self.source_language = tk.StringVar(value=saved.get('voice_source_language') if saved.get('voice_source_language') in LANGUAGES else app.voice.source_language.get())
+        self.target_language = tk.StringVar(value=saved.get('voice_target_language') if saved.get('voice_target_language') in LANGUAGES else app.voice.target_language.get())
         slot = saved.get('slot', 1)
         self.slot = tk.StringVar(value=str(slot if type(slot) is int and 1 <= slot <= 4 else 1))
         self.mode = tk.StringVar(value='Text')
@@ -47,6 +50,19 @@ class ControllerInput:
     def build(self, parent):
         from controller_preview import ControllerPreview
         bg, muted = '#1b1e2e', '#a6acc6'
+        ttk.Label(parent, text='Controller voice · From → To').pack(anchor='w')
+        languages = tk.Frame(parent, bg=bg)
+        languages.pack(fill='x', pady=(8, 12))
+        self.source_picker = ttk.Combobox(languages, textvariable=self.source_language,
+            values=LANGUAGES, state='readonly', font=('Segoe UI',12), width=18)
+        self.source_picker.pack(side='left',fill='x',expand=True)
+        self.source_picker.bind('<<ComboboxSelected>>',self.changed)
+        tk.Button(languages,text='⇄',command=self.swap_languages,bg=bg,fg='#b69aff',
+            font=('Segoe UI',17),width=3,relief='flat',cursor='hand2').pack(side='left',padx=10)
+        self.target_picker = ttk.Combobox(languages, textvariable=self.target_language,
+            values=LANGUAGES, state='readonly', font=('Segoe UI',12), width=18)
+        self.target_picker.pack(side='left',fill='x',expand=True)
+        self.target_picker.bind('<<ComboboxSelected>>',self.changed)
         header = tk.Frame(parent, bg=bg)
         header.pack(fill='x', pady=(0, 8))
         ttk.Checkbutton(header, text='Enable controller', variable=self.enabled,
@@ -189,10 +205,17 @@ class ControllerInput:
             try:
                 temporary = self.path.with_suffix('.tmp')
                 temporary.write_text(json.dumps(dict(self.bindings, enabled=self.enabled.get(),
-                                                      slot=int(self.slot.get()))), encoding='utf-8')
+                                                      slot=int(self.slot.get()),
+                                                      voice_source_language=self.source_language.get(),
+                                                      voice_target_language=self.target_language.get())), encoding='utf-8')
                 temporary.replace(self.path)
             except OSError:
                 self.app.status.set('Controller choice works now, but could not be saved.')
+
+    def swap_languages(self):
+        source,target=self.source_language.get(),self.target_language.get()
+        self.source_language.set(target);self.target_language.set(source)
+        self.changed()
 
     def poll(self):
         pressed = self.reader.read(int(self.slot.get()) - 1)
@@ -225,7 +248,8 @@ class ControllerInput:
                     continue
                 self.targets[mode] = (target, win.last_input())
                 if mode == 'Voice' and (self.voice_owned or not self.app.busy):
-                    self.app.voice.hotkey('down', target, win.last_input())
+                    self.app.voice.hotkey('down', target, win.last_input(),
+                        languages=(self.source_language.get(),self.target_language.get()))
                     self.voice_owned = self.app.voice.recording or self.app.voice.processing
             elif event == 'up':
                 initial = self.targets.pop(mode, None)

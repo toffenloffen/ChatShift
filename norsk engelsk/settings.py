@@ -20,6 +20,9 @@ def load_settings(path=SETTINGS_PATH):
                 result['source_language'] = data['source_language']
             if data.get('target_language') in LANGUAGES:
                 result['target_language'] = data['target_language']
+            for key in ('voice_source_language', 'voice_target_language'):
+                if data.get(key) in LANGUAGES:
+                    result[key] = data[key]
             if isinstance(data.get('auto_send'), bool):
                 result['auto_send'] = data['auto_send']
             if isinstance(data.get('text_enabled'), bool):
@@ -49,12 +52,19 @@ def load_settings(path=SETTINGS_PATH):
 
 def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source_language='Norwegian', text_enabled=True,
                   voice_shortcut=None, voice_enabled=False, voice_mode='hold', voice_auto_send=False,
-                  noise_enabled=False, noise_strength=50, noise_threshold=-50, voice_backend=None):
+                  noise_enabled=False, noise_strength=50, noise_threshold=-50, voice_backend=None,
+                  voice_source_language=None, voice_target_language=None):
+    voice_source_language = voice_source_language or source_language
+    voice_target_language = voice_target_language or language
+    if voice_source_language not in LANGUAGES or voice_target_language not in LANGUAGES:
+        raise ValueError('Choose a voice language from the list.')
     if language not in LANGUAGES or source_language not in LANGUAGES:
         raise ValueError('Choose a language from the list.')
     temporary = path.with_suffix('.tmp')
     temporary.write_text(json.dumps({'target_language': language, 'source_language': source_language,
                                     'auto_send': bool(auto_send),
+                                    'voice_source_language': voice_source_language,
+                                    'voice_target_language': voice_target_language,
                                     'text_enabled': bool(text_enabled),
                                     'voice_shortcut': validate_binding(voice_shortcut or {'modifiers': [], 'key': None}),
                                     'voice_enabled': bool(voice_enabled), 'voice_mode': voice_mode,

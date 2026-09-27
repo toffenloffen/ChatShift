@@ -1,43 +1,37 @@
-# Cloud voice in ChatShift
+# Streaming voice
 
-This development version replaces local Whisper with experimental ChatGPT cloud
-dictation. Optional DeepFilterNet noise suppression still runs locally on the CPU.
-No speech models are downloaded or loaded by the cloud build. Existing model files
-are not deleted. The text translation model and instructions are unchanged.
+Microphone → optional local DeepFilter noise suppression → OpenAI speech transcript
+→ Luna translation → your chat field. Same-language Voice skips translation.
+Text, Voice and Controller have independent language pairs; the speech test uses Voice.
 
-Enable Voice, choose your microphone and shortcut, then speak in your chat field.
-Recording stops on release, a second press, or after 30 seconds. Audio is sent to
-OpenAI when recording stops; the recognized text is translated when languages differ.
-Review the inserted draft before sending. Keep the field focused until it finishes.
+Enable Voice, select your microphone and hold the shortcut or use toggle mode.
+Audio streams while you record. Release stops the microphone; 0.9 seconds of silence
+helps preserve the last words. Warm connections expire after 60 seconds idle and
+never open the microphone. Maximum recording: 30 seconds. Speed/accuracy can vary.
 
-Every dictation request includes a verbatim-transcription prompt asking the service
-to preserve spoken words and language switches without translating or rewriting.
-Support for this prompt field in the internal service is unverified; it is not a
-guarantee of verbatim output. ChatShift does not rewrite the returned transcript
-before passing it to the separate text translator.
+## Why I changed it
 
-The local Mic Test monitors the microphone with optional noise suppression. The
-Speech and translation test lets you listen to original and processed audio. When
-text testing is enabled, it uploads the recording after Stop, shows both texts,
-and never writes into a game. Noise suppression is applied before cloud dictation.
+In my tests, this handled my Norwegian dialect better. Removing local Whisper also
+avoids its large model download and CPU/RAM workload. DeepFilter remains local and
+still uses resources. The cause of the previous crash on another PC remains unknown.
 
 ## Account and privacy
 
-Uses your ChatGPT sign-in through Codex, without an API key. The internal dictation
-endpoint is experimental, not a publicly supported third-party API. Availability
-can change. Pro was tested in the demo; Free voice access is unverified. Earlier
-free-account word/allowance measurements describe text translation, not dictation.
+Both voice and Luna use ChatGPT sign-in through Codex, without an API key or separate
+API billing setup. Install and sign in to Codex; the ChatGPT app alone is not enough.
+**New voice access on a free account has not been verified.** My earlier free-account
+text test does not establish voice availability. Account limits apply.
 
-Microphone audio is converted to mono PCM WAV in memory. ChatShift does not save
-recordings or transcripts to disk. Codex supplies a credential in memory, sent only
-to the fixed ChatGPT HTTPS host. Redirects are rejected; credentials are not logged
-or saved by ChatShift. OpenAI processes uploaded audio under the service/account
-settings. An upload already in progress cannot be recalled. Cancellation prevents
-later translation and insertion; connections have timeouts and are cleaned up.
+Voice uses gpt-live-1-codex through experimental app-server WebRTC. Only user
+transcripts go to Luna; assistant output is ignored. This is not a supported public
+third-party dictation API and availability may change. Access errors are not bypassed.
 
-On migration from local voice, Voice starts disabled until you enable it again.
-There is no background microphone recording and no automatic fallback to local AI.
+ChatShift holds audio/transcripts in memory and does not save them to disk. The speech
+test retains original/filtered audio for playback until the next recording or closing
+its window. Diagnostic files contain timings only. Translations have a short-lived
+in-memory cache. Codex manages authentication and ephemeral sessions. OpenAI processes
+streamed audio/text under its applicable service/account settings; cancellation cannot
+recall audio already sent. This does not promise zero retention by OpenAI.
 
-If your microphone cannot open, choose another input and check Windows permissions.
-Access or quota errors are displayed, not bypassed. A successful test on one PC does
-not establish the cause of a crash on another PC.
+Mic Test is local and does not upload. Speech and translation test streams audio,
+shows both texts and never types into a game. Review drafts before sending.

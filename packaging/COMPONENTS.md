@@ -9,5 +9,7 @@ optional local noise suppression. The model runs on the CPU. Their licenses and
 the soxr source archive are included under licenses. The dynamically loaded soxr
 library may be replaced with a compatible modified version under its LGPL terms.
 
-Whisper, CTranslate2, PyAV and FFmpeg are not bundled. No speech recognition models
+aiortc, PyAV and their WebRTC/FFmpeg dependencies are bundled for streaming audio.
+Available package licenses and metadata are included under licenses.
+Whisper and CTranslate2 are not bundled. No speech recognition models
 download during setup. Old model caches are not deleted.

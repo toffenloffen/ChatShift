@@ -34,7 +34,7 @@ def main():
         "for n,h in _meta.ASSETS.items()]")
     run(python, '-c',
         "import sys; sys.path.insert(0, 'norsk engelsk'); "
-        "import tkinter, sounddevice, numpy; import cloud_voice, audio_recorder; "
+        "import tkinter, sounddevice, numpy; import realtime_adapter, realtime_engine, audio_recorder; "
         "print('Cloud voice dependencies are ready. Sign in to Codex before use.')")
     print('4/4 Creating desktop shortcut...', flush=True)
     # Pass paths as environment data, never interpolate them into shell code.

@@ -7,7 +7,7 @@
 [Setup]
 AppId={#AppIdValue}
 AppName=ChatShift
-AppVersion=0.3.2
+AppVersion=0.4.0
 AppPublisher=toffenloffen
 DefaultDirName={localappdata}\Programs\ChatShift
 DefaultGroupName={#GroupNameValue}

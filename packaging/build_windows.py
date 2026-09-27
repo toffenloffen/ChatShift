@@ -8,7 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'norsk engelsk'
 LEGACY = {'local_voice', 'local_translator', 'model_setup'}
-ENGINES = ('faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub', 'av')
+ENGINES = ('faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub')
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
     for module in APP.glob('*.py'):
         if module.stem not in LEGACY:
             args += ['--hidden-import', module.stem]
-    for package in ('sounddevice', '_sounddevice_data', 'deepfilter_stream', 'soxr', 'onnxruntime'):
+    for package in ('sounddevice', '_sounddevice_data', 'deepfilter_stream', 'soxr', 'onnxruntime', 'aiortc', 'av'):
         args += ['--collect-all', package]
     args += [str(ROOT / 'packaging/launcher.py')]
     environment = os.environ.copy()
@@ -40,6 +40,7 @@ def main():
     for name in ('LICENSE', 'LICENSE-MIT-LEGACY.txt', 'THIRD_PARTY_NOTICES.md'):
         shutil.copy2(ROOT / name, notices / name)
     shutil.copytree(ROOT / 'third_party_licenses/deepfilter', notices / 'deepfilter', dirs_exist_ok=True)
+    shutil.copytree(ROOT / 'third_party_licenses/realtime', notices / 'realtime', dirs_exist_ok=True)
     sources = notices / 'sources'; sources.mkdir(exist_ok=True)
     for archive in (ROOT / 'build/redistribution-sources').glob('soxr-*'):
         shutil.copy2(archive, sources / archive.name)

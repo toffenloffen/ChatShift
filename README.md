@@ -22,22 +22,30 @@ when writing in another language is difficult.
 
 **[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Setup.exe)**
 
-**Development update: cloud voice replaces local speech models.**
-The download below remains the published local-voice release until a cloud release is published.
-No ZIP extraction or separate Python installation is needed.
-
-I tested the previous local-voice installer and voice input on my Windows 10 laptop on 26 September 2026,
-and both worked in my setup. This is a personal test on one laptop, not a guarantee
-for every Windows 10 PC.
+**New: streaming voice, with local noise suppression included.**
+No ZIP extraction, Python installation or Whisper download is needed.
 
 1. Open **ChatShift-Setup.exe** and follow the installer.
-2. Click **Download and set up** to approve the model downloads. Progress shows MB and percent.
-3. Sign in to Codex with your own ChatGPT account if prompted, then choose your
-   languages and shortcuts in ChatShift.
+2. Read the welcome screen and click **Open ChatShift**.
+3. Sign in to Codex with your own ChatGPT account, then choose languages in
+   **Text**, **Voice**, and **Controller** separately. **⇄** swaps each pair.
+4. Enable Voice, choose your microphone and try **Speech and translation test**.
 
-First-time setup downloads about **500 MB** of voice models. Translation requires
-internet access and a ChatGPT account with Codex access; your account's usage limits
-apply. No API key is needed.
+Internet and a ChatGPT account with access to the required Codex models are needed.
+**No API key or separate API billing setup. Free-account access to the new voice
+feature is not yet verified.** The earlier free-account test below covers text only.
+
+## Why I changed voice recognition
+
+In my tests, streaming recognition handled my Norwegian dialect better than the
+previous solution. Audio is processed while I speak, then the transcript goes to
+Luna for translation. Choosing the same voice input and output language keeps the
+transcript without translation. ChatShift uses the recognized speech, not an AI reply.
+
+This also removes the local Whisper workload and its large speech-model download.
+**DeepFilter noise suppression stays local** and cleans the audio before streaming.
+Recognition can still make mistakes; speed depends on the connection and account.
+The cloud voice integration is experimental. See [voice details](VOICE.md).
 
 [Setup help](GET_STARTED.md)
 
@@ -59,7 +67,7 @@ depend on OpenAI's current availability and account limits.
 - **Type or speak:** translate written messages or use your microphone.
 - **Keep chatting where you play:** use keyboard or mouse shortcuts while ChatShift runs in the background.
 - **Review or send automatically:** choose separately for text and voice.
-- **Cloud dictation in the development version:** no local speech-model download. See [voice help](VOICE.md).
+- **Streaming cloud dictation:** no local speech-model download. See [voice help](VOICE.md).
 - **Use the same language** for spelling correction or voice dictation.
 
 ## Using it in a game
@@ -75,10 +83,10 @@ See [game compatibility](COMPATIBILITY.md) for details.
 
 ## Privacy and availability
 
-In the cloud-voice development version, recordings are sent to OpenAI when you stop
-speaking. Translation uses Codex with your account. The published older release uses
-local speech recognition. The cloud connection is experimental, not a publicly
-supported dictation API, and can change or become unavailable. ChatShift is an independent project, not an official OpenAI product.
+While recording, microphone audio is streamed to OpenAI. Translation also uses
+OpenAI through your Codex sign-in. ChatShift does not save recordings or transcripts
+to disk. The experimental Codex voice connection can change or become unavailable.
+ChatShift is an independent project, not an official OpenAI product.
 
 This is an **early Windows release**, free to use. A SteamOS version is in development;
 no Linux installer is published here yet. [Platform status](STEAMOS.md).

@@ -78,7 +78,7 @@ class App:
         self.badge = tk.StringVar(value='CONNECTING')
         self.voice = VoiceInput(self, saved)
         self.controller = ControllerInput(self, persist=prepare)
-        root.title('ChatShift · Chat translator')
+        root.title('ChatShift')
         assets = Path(__file__).resolve().parent / 'assets'
         self.app_icon = tk.PhotoImage(file=str(assets / 'chatshift.png'))
         taskbar_icon = str(assets / 'chatshift-taskbar.ico')
@@ -190,26 +190,10 @@ class App:
                      font=('Segoe UI', 10 if small else 12, 'normal' if small else 'bold'),
                      anchor='w', justify='left').pack(anchor='w')
 
-        language_card = card()
-        label(language_card, '1. Choose your languages')
-        label(language_card, 'From: your language     →     To: the language you want · Applies to text and voice.', small=True)
-        language_row = tk.Frame(language_card, bg=CARD)
-        language_row.pack(fill='x', pady=(13, 4))
-        self.source_picker = ttk.Combobox(language_row, textvariable=self.source_language,
-            values=LANGUAGES, state='readonly', font=('Segoe UI', 12), width=18)
-        self.source_picker.pack(side='left', fill='x', expand=True)
-        self.source_picker.bind('<<ComboboxSelected>>', self.preferences_changed)
-        tk.Label(language_row, text=' → ', bg=CARD, fg=ACCENT,
-                 font=('Segoe UI', 17)).pack(side='left', padx=10)
-        self.language_picker = ttk.Combobox(language_row, textvariable=self.language,
-            values=LANGUAGES, state='readonly', font=('Segoe UI', 12), width=18)
-        self.language_picker.pack(side='left', fill='x', expand=True)
-        self.language_picker.bind('<<ComboboxSelected>>', self.preferences_changed)
-
         self.voice_enabled = self.voice.enabled
 
         shortcut_container = card()
-        label(shortcut_container, '2. Choose how you chat')
+        label(shortcut_container, 'Choose how you chat')
         label(shortcut_container, 'Settings save automatically. Text and voice can both stay on.', small=True)
         self.shortcut_tabs = ttk.Notebook(shortcut_container, style='ChatShift.TNotebook')
         self.shortcut_tabs.pack(fill='x', pady=(12, 0))
@@ -219,6 +203,40 @@ class App:
         self.shortcut_tabs.add(voice_shortcut_card, text='Voice')
         controller_card = tk.Frame(self.shortcut_tabs, bg=CARD, padx=10, pady=12)
         self.shortcut_tabs.add(controller_card, text='Controller')
+        label(shortcut_card, 'Text · From → To', small=True)
+        language_row = tk.Frame(shortcut_card, bg=CARD)
+        language_row.pack(fill='x', pady=(13, 4))
+        self.source_picker = ttk.Combobox(language_row, textvariable=self.source_language,
+            values=LANGUAGES, state='readonly', font=('Segoe UI', 12), width=18)
+        self.source_picker.pack(side='left', fill='x', expand=True)
+        self.source_picker.bind('<<ComboboxSelected>>', self.preferences_changed)
+        self.text_swap = tk.Button(language_row, text='⇄', bg=CARD, fg=ACCENT,
+                 activebackground=BORDER, activeforeground=TEXT, cursor='hand2',
+                 font=('Segoe UI', 17), relief='flat', width=3,
+                 command=self.swap_text_languages)
+        self.text_swap.pack(side='left', padx=10)
+        self.language_picker = ttk.Combobox(language_row, textvariable=self.language,
+            values=LANGUAGES, state='readonly', font=('Segoe UI', 12), width=18)
+        self.language_picker.pack(side='left', fill='x', expand=True)
+        self.language_picker.bind('<<ComboboxSelected>>', self.preferences_changed)
+
+        label(voice_shortcut_card, 'Voice · From → To', small=True)
+        voice_languages = tk.Frame(voice_shortcut_card, bg=CARD)
+        voice_languages.pack(fill='x', pady=(8, 4))
+        self.voice_source_picker = ttk.Combobox(voice_languages, textvariable=self.voice.source_language,
+            values=LANGUAGES, state='readonly', font=('Segoe UI', 12), width=18)
+        self.voice_source_picker.pack(side='left', fill='x', expand=True)
+        self.voice_source_picker.bind('<<ComboboxSelected>>', self.voice.languages_changed)
+        self.voice_swap = tk.Button(voice_languages, text='⇄', bg=CARD, fg=ACCENT,
+                 activebackground=BORDER, activeforeground=TEXT, cursor='hand2',
+                 font=('Segoe UI', 17), relief='flat', width=3,
+                 command=self.swap_voice_languages)
+        self.voice_swap.pack(side='left', padx=10)
+        self.voice_target_picker = ttk.Combobox(voice_languages, textvariable=self.voice.target_language,
+            values=LANGUAGES, state='readonly', font=('Segoe UI', 12), width=18)
+        self.voice_target_picker.pack(side='left', fill='x', expand=True)
+        self.voice_target_picker.bind('<<ComboboxSelected>>', self.voice.languages_changed)
+
         self.controller.build(controller_card)
         ttk.Checkbutton(voice_shortcut_card, text='Enable voice input', variable=self.voice_enabled,
                         command=self.voice.changed).pack(anchor='w', pady=(0, 6))
@@ -354,6 +372,18 @@ class App:
                         'Could not start the translator. Restart ChatShift.'))
             threading.Thread(target=load, daemon=True).start()
 
+    def swap_text_languages(self):
+        source, target = self.source_language.get(), self.language.get()
+        self.source_language.set(target)
+        self.language.set(source)
+        self.preferences_changed()
+
+    def swap_voice_languages(self):
+        source, target = self.voice.source_language.get(), self.voice.target_language.get()
+        self.voice.source_language.set(target)
+        self.voice.target_language.set(source)
+        self.voice.languages_changed()
+
     def preferences_changed(self, event=None):
         if self.settings_path:
             try:
@@ -362,6 +392,8 @@ class App:
                               text_enabled=self.text_enabled.get(), voice_shortcut=self.voice.binding,
                               voice_enabled=self.voice.enabled.get(), voice_mode=self.voice.mode.get(),
                               voice_auto_send=self.voice.auto_send.get(),
+                              voice_source_language=self.voice.source_language.get(),
+                              voice_target_language=self.voice.target_language.get(),
                               voice_backend='cloud', noise_enabled=self.voice.noise_enabled.get(),
                               noise_strength=self.voice.noise_strength.get(),
                               noise_threshold=self.voice.noise_threshold.get())
@@ -645,6 +677,9 @@ class App:
                 temporary.write_text(json.dumps({'pid': os.getpid(), 'updated': time.time(),
                     'active': self.registered, 'model_ready': self.local is not None, 'backend': 'codex-chatgpt',
                     'model': getattr(self.local, 'model', None), 'target_language': self.language.get(),
+                    'source_language': self.source_language.get(),
+                    'voice_source_language': self.voice.source_language.get(),
+                    'voice_target_language': self.voice.target_language.get(),
                     'shortcut': binding_label(self.binding),
                     'voice_shortcut': binding_label(self.voice.binding),
                     'voice_ready': self.voice.model is not None,
@@ -665,6 +700,8 @@ class App:
 
     def close(self):
         self.closing = True
+        if getattr(self, 'speech_model', None):
+            self.speech_model.close()
         self.controller.reset()
         voice = getattr(self, 'voice_trial', None)
         if voice is not None and not voice.closed:
