@@ -114,7 +114,7 @@ def validate_wav(data):
             duration = audio.getnframes() / audio.getframerate()
             if audio.getsampwidth() != 2 or audio.getnchannels() != 1:
                 raise CloudError('Bruk en mono WAV-fil med 16-bit PCM.')
-            if not 0.3 <= duration <= MAX_SECONDS + 0.1:
+            if not 0.3 <= duration <= MAX_SECONDS + 0.2:
                 raise CloudError('Opptaket må vare mellom 0,3 og 30 sekunder.')
             expected = audio.getnframes() * 2
             if len(audio.readframes(audio.getnframes())) != expected:

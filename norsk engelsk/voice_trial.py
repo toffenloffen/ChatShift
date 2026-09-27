@@ -14,7 +14,8 @@ class VoiceTrial:
         self.closed = False
         self.recording = False
         self.model = None
-        self.recorder = Recorder()
+        from filtered_recorder import FilteredRecorder
+        self.recorder = FilteredRecorder()
         self.events = queue.Queue()
         self.cancel = threading.Event()
         self.owns_busy = False
@@ -49,12 +50,14 @@ class VoiceTrial:
         self.level.pack(fill='x', pady=4)
         self.reading = (-120., -120.)
         self.level.bind('<Configure>', lambda e: self.draw_levels())
-
+        self.noise_option = ttk.Checkbutton(body, text='Noise suppression (DeepFilterNet3)', variable=app.voice.noise_enabled, command=app.voice.noise_changed)
+        self.noise_option.pack(anchor='w')
         playback = ttk.Frame(body)
         playback.pack(fill='x', pady=8)
         self.play_original = ttk.Button(playback, text='Listen: original', state='disabled', command=lambda: self.play(False))
         self.play_original.pack(side='left')
-
+        self.play_filtered = ttk.Button(playback, text='Listen: processed', state='disabled', command=lambda: self.play(True))
+        self.play_filtered.pack(side='left', padx=8)
         ttk.Button(playback, text='Stop playback', command=self.stop_playback).pack(side='left')
         ttk.Label(body, text='What the microphone heard').pack(anchor='w')
         self.original = tk.Text(body, height=4, wrap='word', bg='#1b1e2e', fg='#f2f3ff', insertbackground='white')
@@ -62,7 +65,7 @@ class VoiceTrial:
         ttk.Label(body, text='Luna translation · review only').pack(anchor='w')
         self.output = tk.Text(body, height=4, wrap='word', bg='#1b1e2e', fg='#f2f3ff', insertbackground='white')
         self.output.pack(fill='x', pady=5)
-        ttk.Label(body, text='Audio is sent to OpenAI for cloud dictation. Text goes to Luna when languages differ.\nRecording stops automatically after 30 seconds.', wraplength=640).pack(anchor='w', pady=8)
+        ttk.Label(body, text='Noise suppression runs locally. Audio is uploaded to OpenAI after Stop when transcription is enabled.\nRecording stops automatically after 30 seconds.', wraplength=640).pack(anchor='w', pady=8)
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = self.window.after(50, self.poll)
 
@@ -91,12 +94,12 @@ class VoiceTrial:
             self.recording = False
             self.button.configure(state='disabled', text='Processing…')
             try:
-                audio = self.recorder.stop()
+                audio, cleaned = self.recorder.stop()
             except ValueError as exc:
                 self.finish(str(exc))
                 return
-            self.status.set('Transcribing audio in the cloud…')
-            threading.Thread(target=self.process, args=(audio,), daemon=True).start()
+            self.status.set('Preparing recording for cloud dictation…')
+            threading.Thread(target=self.process, args=(audio, cleaned), daemon=True).start()
             return
         monitor = getattr(self.app.voice, 'monitor', None)
         if monitor is not None and monitor.thread is not None:
@@ -114,14 +117,16 @@ class VoiceTrial:
         self.target = self.app.language.get()
         try:
             self.stop_playback()
-            self.recorder.start(self.devices[self.device.current()])
+            self.recorder.start(self.devices[self.device.current()], self.session_noise['enabled'])
         except ValueError as exc:
             self.status.set(str(exc))
             return
         self.app.busy = self.owns_busy = True
         self.recording = True
         self.device.configure(state='disabled')
+        self.noise_option.configure(state='disabled')
         self.play_original.configure(state='disabled')
+        self.play_filtered.configure(state='disabled')
         self.raw_audio = self.filtered_audio = None
         self.button.configure(text='Stop recording')
         self.original.delete('1.0', 'end')
@@ -141,13 +146,15 @@ class VoiceTrial:
     def process(self, audio, cleaned=None):
         started = time.perf_counter()
         try:
+            from audio_cleanup import clean_audio
             if cleaned is None:
-                cleaned = audio
+                cleaned = clean_audio(audio, **self.session_noise)
             if self.cancel.is_set():
                 return
             self.events.put(('audio', (audio, cleaned)))
             if not self.session_text:
-                self.events.put(('done', 'Ready to listen. No audio uploaded.'))
+                state = 'on' if self.session_noise['enabled'] else 'off'
+                self.events.put(('done', f'Ready to listen. Noise suppression: {state}. Nothing sent to your game.'))
                 return
             self.model = getattr(self.app, 'speech_model', None) or CloudTranscriber()
             text = self.model.transcribe(cleaned, self.source, cancel=self.cancel)
@@ -172,9 +179,11 @@ class VoiceTrial:
         self.status.set(message)
         self.device.configure(state='readonly')
         self.button.configure(text='Start recording', state='normal')
+        self.noise_option.configure(state='normal')
         self.draw_levels()
         if self.raw_audio is not None:
             self.play_original.configure(state='normal')
+            self.play_filtered.configure(state='normal')
         if self.owns_busy:
             self.app.busy = self.owns_busy = False
 

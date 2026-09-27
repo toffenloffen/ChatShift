@@ -10,7 +10,14 @@ def get_model():
     global _model
     with _model_lock:
         if _model is None:
-            from deepfilter_stream import DeepFilterModel
+            import os
+            import sys
+            from pathlib import Path
+            from app_paths import MODELS
+            from deepfilter_stream import DeepFilterModel, _meta
+            folder = (Path(sys._MEIPASS) / 'noise-models' if getattr(sys, 'frozen', False)
+                      else MODELS / 'deepfilter' / _meta.MODEL_VERSION)
+            os.environ['DEEPFILTER_STREAM_MODEL_DIR'] = str(folder)
             _model = DeepFilterModel(intra_op_num_threads=1, inter_op_num_threads=1)
     return _model
 

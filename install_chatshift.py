@@ -25,7 +25,13 @@ def main():
         venv.EnvBuilder(with_pip=True).create(environment)
     print('2/4 Installing text and voice requirements...', flush=True)
     run(python, '-m', 'pip', 'install', '-r', ROOT / 'requirements-voice.txt')
-    print('3/4 Checking cloud voice capture. No model download or audio upload.', flush=True)
+    print('3/4 Preparing noise suppression and cloud voice. No audio upload.', flush=True)
+    run(python, '-c',
+        "import sys; from pathlib import Path; sys.path.insert(0, 'packaging'); "
+        "from model_setup import download_verified; from deepfilter_stream import _meta; "
+        "[download_verified(f'{_meta.RELEASE_BASE_URL}/{n}', "
+        "Path('.models/deepfilter')/_meta.MODEL_VERSION/n, h, lambda *a: None) "
+        "for n,h in _meta.ASSETS.items()]")
     run(python, '-c',
         "import sys; sys.path.insert(0, 'norsk engelsk'); "
         "import tkinter, sounddevice, numpy; import cloud_voice, audio_recorder; "

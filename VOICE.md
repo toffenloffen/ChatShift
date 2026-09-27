@@ -1,7 +1,7 @@
 # Cloud voice in ChatShift
 
-This development version replaces local Whisper and DeepFilterNet with experimental
-ChatGPT cloud dictation. The published older installer may still use local voice.
+This development version replaces local Whisper with experimental ChatGPT cloud
+dictation. Optional DeepFilterNet noise suppression still runs locally on the CPU.
 No speech models are downloaded or loaded by the cloud build. Existing model files
 are not deleted. The text translation model and instructions are unchanged.
 
@@ -10,8 +10,10 @@ Recording stops on release, a second press, or after 30 seconds. Audio is sent t
 OpenAI when recording stops; the recognized text is translated when languages differ.
 Review the inserted draft before sending. Keep the field focused until it finishes.
 
-The local Mic Test only monitors the microphone. The Speech and translation test
-uploads its recording after Stop, shows both texts, and never writes into a game.
+The local Mic Test monitors the microphone with optional noise suppression. The
+Speech and translation test lets you listen to original and processed audio. When
+text testing is enabled, it uploads the recording after Stop, shows both texts,
+and never writes into a game. Noise suppression is applied before cloud dictation.
 
 ## Account and privacy
 

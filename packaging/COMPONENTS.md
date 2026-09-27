@@ -4,6 +4,10 @@ This build includes Python/Tcl/Tk, Pillow, NumPy, sounddevice/PortAudio and thei
 runtime dependencies. Actual distribution licenses and metadata are included under
 licenses; runtime-inventory.txt also records the build tools. Codex is external.
 
-Whisper, DeepFilterNet, ONNX Runtime, CTranslate2, soxr, PyAV and FFmpeg are not bundled.
-No speech models download during setup. Legacy source files remain in the repository
-for reference but are excluded from this build. Old model caches are not deleted.
+DeepFilterNet, its verified model assets, ONNX Runtime and soxr are included for
+optional local noise suppression. The model runs on the CPU. Their licenses and
+the soxr source archive are included under licenses. The dynamically loaded soxr
+library may be replaced with a compatible modified version under its LGPL terms.
+
+Whisper, CTranslate2, PyAV and FFmpeg are not bundled. No speech recognition models
+download during setup. Old model caches are not deleted.

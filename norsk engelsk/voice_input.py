@@ -52,7 +52,7 @@ class VoiceInput:
     def __init__(self, app, saved):
         self.app = app
         self.enabled = tk.BooleanVar(value=saved.get('voice_enabled', False) and saved.get('voice_backend') == 'cloud')
-        self.noise_enabled = tk.BooleanVar(value=False)
+        self.noise_enabled = tk.BooleanVar(value=saved.get('noise_enabled', False))
         self.noise_strength = tk.DoubleVar(value=saved.get('noise_strength', 50))
         self.noise_threshold = tk.DoubleVar(value=saved.get('noise_threshold', -50))
         self.mode = tk.StringVar(value=saved.get('voice_mode', 'hold'))
@@ -98,6 +98,8 @@ class VoiceInput:
         cleanup = tk.Frame(parent, bg=parent.cget('background'))
         cleanup.pack(fill='x', pady=8)
         ttk.Label(cleanup, text='Cloud dictation · audio is sent to OpenAI when you finish.\nExperimental · ChatGPT sign-in and internet required; account limits apply.', wraplength=600).pack(anchor='w')
+        ttk.Checkbutton(cleanup, text='Noise suppression (DeepFilterNet3)', variable=self.noise_enabled,
+                        command=self.noise_changed).pack(anchor='w')
         from mic_monitor import MicMonitor
         self.monitor = MicMonitor(self, cleanup)
         ttk.Label(parent, textvariable=self.hint, wraplength=600).pack(anchor='w', pady=8)
@@ -265,7 +267,11 @@ class VoiceInput:
             try:
                 if cancel.is_set():
                     return
-                text = self.model.transcribe(audio, self.source, cancel=cancel)
+                from audio_cleanup import clean_audio
+                cleaned = clean_audio(audio, **self.session_noise)
+                if cancel.is_set():
+                    return
+                text = self.model.transcribe(cleaned, self.source, cancel=cancel)
                 if cancel.is_set():
                     return
                 if len(text) > 1000:
