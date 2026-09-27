@@ -21,7 +21,7 @@ class VoiceTrialTests(unittest.TestCase):
     def test_audio_test_works_without_model_or_translation(self):
         trial = self.trial()
         audio = np.zeros(16000, dtype='float32')
-        with patch('voice_trial.LocalTranscriber', side_effect=AssertionError('must not load')):
+        with patch('voice_trial.CloudTranscriber', side_effect=AssertionError('must not load')):
             trial.process(audio)
         events = list(trial.events.queue)
         self.assertEqual([kind for kind, _ in events], ['audio', 'done', 'released'])
@@ -52,7 +52,7 @@ class VoiceTrialTests(unittest.TestCase):
         filtered = np.ones(16000, dtype='float32') * .01
         with patch('audio_cleanup.clean_audio', side_effect=AssertionError('must not filter twice')):
             trial.process(raw, filtered)
-        trial.app.speech_model.transcribe.assert_called_once_with(filtered, 'Norwegian')
+        trial.app.speech_model.transcribe.assert_called_once_with(filtered, 'Norwegian', cancel=trial.cancel)
         trial.app.local.translate.assert_called_once_with('Ikke angrip ennå.', target_language='English', source_language='Norwegian')
         events = list(trial.events.queue)
         self.assertEqual([k for k, _ in events], ['audio', 'original', 'output', 'done', 'released'])

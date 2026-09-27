@@ -28,6 +28,8 @@ def load_settings(path=SETTINGS_PATH):
                 result['shortcut'] = validate_binding(data['shortcut'])
             if 'voice_shortcut' in data:
                 result['voice_shortcut'] = validate_binding(data['voice_shortcut'])
+            if data.get('voice_backend') == 'cloud':
+                result['voice_backend'] = 'cloud'
             if isinstance(data.get('voice_enabled'), bool):
                 result['voice_enabled'] = data['voice_enabled']
             if isinstance(data.get('voice_auto_send'), bool):
@@ -47,7 +49,7 @@ def load_settings(path=SETTINGS_PATH):
 
 def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source_language='Norwegian', text_enabled=True,
                   voice_shortcut=None, voice_enabled=False, voice_mode='hold', voice_auto_send=False,
-                  noise_enabled=False, noise_strength=50, noise_threshold=-50):
+                  noise_enabled=False, noise_strength=50, noise_threshold=-50, voice_backend=None):
     if language not in LANGUAGES or source_language not in LANGUAGES:
         raise ValueError('Choose a language from the list.')
     temporary = path.with_suffix('.tmp')
@@ -56,6 +58,7 @@ def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source
                                     'text_enabled': bool(text_enabled),
                                     'voice_shortcut': validate_binding(voice_shortcut or {'modifiers': [], 'key': None}),
                                     'voice_enabled': bool(voice_enabled), 'voice_mode': voice_mode,
+                                    'voice_backend': voice_backend,
                                     'voice_auto_send': bool(voice_auto_send),
                                     'noise_enabled': bool(noise_enabled),
                                     'noise_strength': max(0, min(100, float(noise_strength))),

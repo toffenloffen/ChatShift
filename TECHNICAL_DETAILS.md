@@ -24,10 +24,10 @@
 
 ## Privacy and usage
 
-Only text captured by the translation shortcut is sent to OpenAI. In Among Us, a visible
+Text captured by the translation shortcut and completed cloud voice recordings are sent to OpenAI. In Among Us, a visible
 game frame is captured in memory and cropped to the outgoing field and character counter
-for local Windows OCR. Images are not saved or uploaded; incoming chat is not translated. Codex manages sign-in; ChatShift does not extract
-or copy login tokens. Its app-server connection uses local stdin/stdout pipes, not an open network port.
+for local Windows OCR. Images are not saved or uploaded; incoming chat is not translated. Codex manages sign-in. Cloud dictation receives a credential through its app-server
+and uses it only in memory for the fixed ChatGPT HTTPS endpoint; it is never logged or saved. Its app-server connection uses local stdin/stdout pipes, not an open network port.
 The OpenAI service processes the text according to your account's data settings.
 
 Recent messages and translations exist in memory: a model session is rotated after five
@@ -66,7 +66,7 @@ Optional live tests use your Codex allowance and a disposable text field:
 
 The standard installer includes Pillow for smooth controller rendering. Development
 dependencies are in `requirements-dev.txt`. Windows CI runs the offline tests and a
-separate installation check that downloads and loads the speech model. These checks
+separate installation check of the cloud voice capture dependencies, without recording or uploading audio. These checks
 do not replace physical controller and in-game testing.
 
 The old local translator and API client are retained as experimental alternatives, but are

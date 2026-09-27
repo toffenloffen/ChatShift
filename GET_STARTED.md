@@ -2,7 +2,9 @@
 
 **Write or speak. Press your shortcut. Chat in another language.**
 
-This is an early Windows release. Setup includes both text and local voice support.
+This guide describes the cloud-voice development build. The currently published
+GitHub installer may still use local voice; check its release notes. Cloud voice
+requires internet and ChatGPT sign-in. Free voice access has not been verified.
 For Steam Deck / SteamOS or other Linux systems, see [platform status](STEAMOS.md);
 do not run the Windows installer there.
 
@@ -15,24 +17,13 @@ Using a controller? See [controller setup](CONTROLLERS.md).
 1. Double-click **ChatShift-Setup.exe** and follow the Windows installer. It installs
    only for your Windows account, with Start Menu and desktop shortcuts.
    You do not need to install Python, extract a ZIP or keep a source folder.
-2. Choose **Download and set up** in the welcome window to approve the downloads.
-   It names the sources: Hugging Face for Whisper small and GitHub for DeepFilterNet3
-   (about 500 MB total). Progress shows downloaded MB and percent for each file;
-   downloads can take several minutes. Setup does not record the microphone.
-3. If Codex is not ready, use **Setup** in ChatShift to install/open Codex and sign in with your
-   own ChatGPT account. ChatShift cannot authenticate you. Your account needs Codex
-   access; account usage limits apply. No API key or prompt is needed.
-4. ChatShift opens automatically after preparation. Choose your languages and enable text or voice.
+2. Read the welcome screen and click **Open ChatShift**. There are no speech models to download.
+3. Sign in to Codex with your own ChatGPT account, then choose your languages and shortcuts.
+4. Enable **Voice input** when you want cloud dictation. Recordings are uploaded to OpenAI when you stop.
 
-If a download fails, check internet access and free disk space, then choose **Try again**.
-Diagnostic details are saved in the app data folder as `setup-error.log`. **ChatShift Setup** in Start
-reopens preparation for all features.
-
-Updates use the same installer. Close ChatShift first. Settings and model downloads
-live in `%LOCALAPPDATA%/ChatShift`, separately from program files, and are preserved
-by updates and uninstall. Remove ChatShift through Windows Settings → Apps.
-An older source-folder installation is left untouched; its preferences are not
-silently copied.
+Updates preserve settings. Voice starts disabled when upgrading from local voice so
+that the change in audio handling is visible before use. Old model files are left
+untouched; the cloud version does not load them.
 
 ## 2. Choose your languages and buttons
 
@@ -70,17 +61,14 @@ Using a gamepad? Open **Controller** for its clickable diagram and see the
 [controller guide](CONTROLLERS.md), including rear-button mapping. Status and Pause
 stay visible at the bottom while you browse settings.
 
-Want to check noise suppression? Enable **Voice → Noise suppression (DeepFilterNet3)**,
-click **Mic Test**, and optionally enable **Listen (headphones)**. Input shows your
-microphone before filtering; Output shows the filtered audio. Switch suppression off
-and on while listening to compare. Click **Stop Test** when finished.
+Click **Mic Test** to check your microphone levels and optionally listen through headphones.
+This monitor does not upload audio. Stop the test when finished.
 
-For text results, open **Voice → Speech and translation test → Test translation**.
-Click **Start recording**, speak, then **Stop recording**. The test displays Whisper's
-transcription and the translation, without writing into your game. **Listen: original**
-and **Listen: processed** let you compare the same recording. Starting this recording
-stops an active Mic Test first. Background voices and singing may still be recognized;
-check the words as well as the sound.
+**Speech and translation test** records up to 30 seconds. When you stop, it sends the
+recording to OpenAI and displays the transcript and translation without typing in
+your game. Original playback stays in memory until the window closes or you record
+again. Closing cancels subsequent translation/insertion; an upload already in
+progress cannot be recalled.
 
 ## Good to know
 
@@ -89,7 +77,7 @@ check the words as well as the sound.
 - ChatShift translates your outgoing messages, not messages from other players.
 - The window stays open at startup. **Run in background** at the top hides it when you choose.
   **Pause** stops shortcuts. Closing exits the app.
-- Audio stays in memory on your PC. Text goes to OpenAI when translation is needed.
+- Recorded voice is uploaded to OpenAI when you stop. Text goes to OpenAI when translation is needed.
 - Your clipboard is overwritten during insertion. Check the field before retrying a failure.
 - Microphone selection currently resets to the Windows default when you restart.
 - SteamOS support is not implemented in this version.

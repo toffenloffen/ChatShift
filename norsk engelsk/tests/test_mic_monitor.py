@@ -1,4 +1,5 @@
 import unittest
+import importlib.util
 import threading
 import queue
 from types import SimpleNamespace
@@ -45,6 +46,7 @@ class MonitorTests(unittest.TestCase):
             self.assertAlmostEqual(level,audio_level(out))
             self.assertAlmostEqual(level,-60,places=3)
 
+    @unittest.skipUnless(importlib.util.find_spec('soxr') and importlib.util.find_spec('deepfilter_stream'), 'Legacy local filter is not installed')
     def test_shared_filter_batch_matches_stream_with_tail(self):
         import soxr
         source=np.random.default_rng(6).normal(0,.02,16000).astype(np.float32)

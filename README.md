@@ -6,7 +6,8 @@ Write or speak in your own language. ChatShift translates your message directly
 into your game or app's chat field, so you can join the conversation without
 switching to a translation window.
 
-**Tested with a free ChatGPT account — no API key or separate API billing needed.**
+**Text translation tested with a free ChatGPT account — no API key needed.**
+Cloud voice is experimental; free-account voice access has not been verified.
 
 I'm **[toffenloffen](https://github.com/toffenloffen)**. I created ChatShift to make chatting easier
 when writing in another language is difficult.
@@ -21,10 +22,11 @@ when writing in another language is difficult.
 
 **[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Setup.exe)**
 
-**New: one Windows installer for text, voice and noise suppression.**
+**Development update: cloud voice replaces local speech models.**
+The download below remains the published local-voice release until a cloud release is published.
 No ZIP extraction or separate Python installation is needed.
 
-I tested the installer and voice input on my Windows 10 laptop on 26 September 2026,
+I tested the previous local-voice installer and voice input on my Windows 10 laptop on 26 September 2026,
 and both worked in my setup. This is a personal test on one laptop, not a guarantee
 for every Windows 10 PC.
 
@@ -57,7 +59,7 @@ depend on OpenAI's current availability and account limits.
 - **Type or speak:** translate written messages or use your microphone.
 - **Keep chatting where you play:** use keyboard or mouse shortcuts while ChatShift runs in the background.
 - **Review or send automatically:** choose separately for text and voice.
-- **Reduce microphone background noise** with optional local noise suppression.
+- **Cloud dictation in the development version:** no local speech-model download. See [voice help](VOICE.md).
 - **Use the same language** for spelling correction or voice dictation.
 
 ## Using it in a game
@@ -73,9 +75,10 @@ See [game compatibility](COMPATIBILITY.md) for details.
 
 ## Privacy and availability
 
-Speech recognition and noise suppression run on your PC. Microphone audio stays
-local; text requiring AI processing is sent to OpenAI through Codex using your
-account. ChatShift is an independent project, not an official OpenAI product.
+In the cloud-voice development version, recordings are sent to OpenAI when you stop
+speaking. Translation uses Codex with your account. The published older release uses
+local speech recognition. The cloud connection is experimental, not a publicly
+supported dictation API, and can change or become unavailable. ChatShift is an independent project, not an official OpenAI product.
 
 This is an **early Windows release**, free to use. A SteamOS version is in development;
 no Linux installer is published here yet. [Platform status](STEAMOS.md).

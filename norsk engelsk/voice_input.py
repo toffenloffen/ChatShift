@@ -1,4 +1,4 @@
-"""Local dictation lifecycle and guarded, unsent insertion into the user's field."""
+"""Cloud dictation lifecycle and guarded, unsent insertion into the user's field."""
 import queue
 import threading
 import time
@@ -51,8 +51,8 @@ def insert_draft(target, revision, text, owner, cancel, binding, send=False):
 class VoiceInput:
     def __init__(self, app, saved):
         self.app = app
-        self.enabled = tk.BooleanVar(value=saved.get('voice_enabled', False))
-        self.noise_enabled = tk.BooleanVar(value=saved.get('noise_enabled', False))
+        self.enabled = tk.BooleanVar(value=saved.get('voice_enabled', False) and saved.get('voice_backend') == 'cloud')
+        self.noise_enabled = tk.BooleanVar(value=False)
         self.noise_strength = tk.DoubleVar(value=saved.get('noise_strength', 50))
         self.noise_threshold = tk.DoubleVar(value=saved.get('noise_threshold', -50))
         self.mode = tk.StringVar(value=saved.get('voice_mode', 'hold'))
@@ -97,8 +97,7 @@ class VoiceInput:
         self.device_picker.bind('<<ComboboxSelected>>', lambda event: self.abort('Microphone changed.'))
         cleanup = tk.Frame(parent, bg=parent.cget('background'))
         cleanup.pack(fill='x', pady=8)
-        ttk.Checkbutton(cleanup, text='Noise suppression (DeepFilterNet3)', variable=self.noise_enabled,
-                        command=self.noise_changed).pack(anchor='w')
+        ttk.Label(cleanup, text='Cloud dictation · audio is sent to OpenAI when you finish.\nExperimental · ChatGPT sign-in and internet required; account limits apply.', wraplength=600).pack(anchor='w')
         from mic_monitor import MicMonitor
         self.monitor = MicMonitor(self, cleanup)
         ttk.Label(parent, textvariable=self.hint, wraplength=600).pack(anchor='w', pady=8)
@@ -199,18 +198,18 @@ class VoiceInput:
         if self.model is not None or self.loading:
             return
         self.loading = True
-        self.hint.set('Loading local voice… The first setup downloads the model.')
+        self.hint.set('Connecting cloud voice through your ChatGPT sign-in…')
         def work():
             try:
-                from local_voice import LocalTranscriber
+                from cloud_voice import CloudTranscriber
                 from microphones import list_microphones
                 devices = list_microphones()
-                model = getattr(self.app, 'speech_model', None) or LocalTranscriber()
+                model = getattr(self.app, 'speech_model', None) or CloudTranscriber()
                 self.events.put(('ready', (model, devices)))
             except ImportError:
                 self.events.put(('load_error', 'Voice setup is incomplete. Run Install ChatShift.cmd, then restart ChatShift.'))
             except Exception:
-                self.events.put(('load_error', 'Could not load voice. Check internet access, audio devices and free disk space.'))
+                self.events.put(('load_error', 'Could not prepare cloud voice. Check Codex sign-in, internet and microphone setup.'))
         threading.Thread(target=work, daemon=True).start()
 
     def hotkey(self, kind, target, revision):
@@ -224,7 +223,7 @@ class VoiceInput:
             return
         if not self.enabled.get() or self.model is None or self.app.busy or not self.app.registered:
             return
-        from local_voice import Recorder
+        from audio_recorder import Recorder
         self.target = target
         self.revision = revision
         self.source = self.app.source_language.get()
@@ -259,14 +258,14 @@ class VoiceInput:
             return
         self.processing = True
         self.app.badge.set('TRANSCRIBING')
-        self.app.status.set('Recognizing your voice… stay in the same chat field.')
+        self.app.status.set('Recognizing speech in the cloud… stay in the same chat field.')
         cancel = self.cancel
         def work():
             started = time.perf_counter()
             try:
-                from audio_cleanup import clean_audio
-                cleaned = clean_audio(audio, **self.session_noise)
-                text = self.model.transcribe(cleaned, self.source)
+                if cancel.is_set():
+                    return
+                text = self.model.transcribe(audio, self.source, cancel=cancel)
                 if cancel.is_set():
                     return
                 if len(text) > 1000:

@@ -50,14 +50,14 @@ class MicMonitor:
         if self.app.busy:
             self.label.configure(text='Wait for the current recording or translation to finish.')
             return
-        self.options = (self.voice.noise_enabled.get(), self.listen.get())
+        self.options = (False, self.listen.get())
         self.stop_event.clear()
         self.levels = queue.SimpleQueue()
         self.error = None
         self.app.busy = True
         self.voice.device_picker.configure(state='disabled')
         self.button.configure(text='Stop Test')
-        self.label.configure(text='Loading filter and starting microphone…')
+        self.label.configure(text='Starting microphone…')
         device = self.voice.devices.get(self.voice.device.get())
         self.thread = threading.Thread(target=self.run, args=(device,), daemon=True)
         self.thread.start()
@@ -67,10 +67,15 @@ class MicMonitor:
         try:
             import numpy as np
             import sounddevice as sd
-            from audio_cleanup import SpeechFilter, audio_level, get_model
-            if self.options[0]:
-                get_model()  # Finish setup before opening the microphone.
-            processor = SpeechFilter()
+            class RawMonitor:
+                RATE = 48000
+                FRAME = 512
+                def process(self, audio, enabled):
+                    level = float(20*np.log10(max(1e-6, float(np.sqrt(np.mean(audio**2))))))
+                    return audio.copy(), level, None
+                def close(self):
+                    pass
+            processor = RawMonitor()
             with contextlib.ExitStack() as stack:
                 incoming = stack.enter_context(sd.InputStream(device=device, samplerate=processor.RATE,
                     blocksize=processor.FRAME, channels=1, dtype='float32', latency='high'))
@@ -80,7 +85,7 @@ class MicMonitor:
                     data, overflow = incoming.read(processor.FRAME)
                     enabled, listen = self.options
                     out, level, _ = processor.process(data[:, 0], enabled)
-                    self.levels.put((audio_level(data[:, 0]), level))
+                    self.levels.put((level, level))
                     if listen and output is None:
                         output = stack.enter_context(sd.OutputStream(samplerate=processor.RATE,
                             blocksize=processor.FRAME, channels=1, dtype='float32', latency='high'))
@@ -97,7 +102,7 @@ class MicMonitor:
     def poll(self):
         if not self.thread:
             return
-        self.options = (self.voice.noise_enabled.get(), self.listen.get())
+        self.options = (False, self.listen.get())
         # Peak of actual per-frame RMS readings since last paint: short claps
         # remain visible, and are never mistaken for speech-detector confidence.
         readings = []
@@ -113,8 +118,7 @@ class MicMonitor:
             self.reading = (-120., -120.)
             self.label.configure(text=self.error or 'Test stopped. No audio was saved.')
         else:
-            self.label.configure(text='DeepFilterNet3 on · compare Input and Output' if self.options[0]
-                                 else 'Noise suppression off · Output matches Input')
+            self.label.configure(text='Microphone monitor · no audio is uploaded by this test')
         self.draw()
 
     def stop(self):

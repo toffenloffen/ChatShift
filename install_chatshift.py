@@ -25,14 +25,11 @@ def main():
         venv.EnvBuilder(with_pip=True).create(environment)
     print('2/4 Installing text and voice requirements...', flush=True)
     run(python, '-m', 'pip', 'install', '-r', ROOT / 'requirements-voice.txt')
-    print('3/4 Downloading and checking local voice model (several hundred MB).\n'
-          'First setup may take several minutes. No microphone recording is made.', flush=True)
+    print('3/4 Checking cloud voice capture. No model download or audio upload.', flush=True)
     run(python, '-c',
         "import sys; sys.path.insert(0, 'norsk engelsk'); "
-        "import tkinter, sounddevice; from local_voice import LocalTranscriber; "
-        "from audio_cleanup import clean_audio; import numpy as np; "
-        "clean_audio(np.zeros(1600, dtype=np.float32), enabled=True); "
-        "LocalTranscriber(); print('Local voice model and noise suppression are ready.')")
+        "import tkinter, sounddevice, numpy; import cloud_voice, audio_recorder; "
+        "print('Cloud voice dependencies are ready. Sign in to Codex before use.')")
     print('4/4 Creating desktop shortcut...', flush=True)
     # Pass paths as environment data, never interpolate them into shell code.
     env = os.environ.copy()

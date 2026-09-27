@@ -362,7 +362,7 @@ class App:
                               text_enabled=self.text_enabled.get(), voice_shortcut=self.voice.binding,
                               voice_enabled=self.voice.enabled.get(), voice_mode=self.voice.mode.get(),
                               voice_auto_send=self.voice.auto_send.get(),
-                              noise_enabled=self.voice.noise_enabled.get(),
+                              voice_backend='cloud', noise_enabled=False,
                               noise_strength=self.voice.noise_strength.get(),
                               noise_threshold=self.voice.noise_threshold.get())
             except OSError:
