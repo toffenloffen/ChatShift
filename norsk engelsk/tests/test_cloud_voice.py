@@ -49,7 +49,16 @@ class BackendTests(unittest.TestCase):
         request = transport.requests[0]
         self.assertIn(data, request.data)
         self.assertIn(b'name="file"', request.data)
+        from cloud_voice import TRANSCRIPTION_PROMPT
+        self.assertIn(b'name="prompt"', request.data)
+        self.assertIn(TRANSCRIPTION_PROMPT.encode('utf-8'), request.data)
         self.assertIsNone(request.get_header('Authorization'))
+
+    def test_code_switched_transcript_is_returned_without_rewriting(self):
+        spoken = 'Jeg trenger wood og stein ved spawn.'
+        transport = Opener(json.dumps({'text': spoken}).encode())
+        self.assertEqual(transcribe(Login(), wav(), language='no', opener=transport), spoken)
+        self.assertIn(b'name="language"\r\n\r\nno\r\n', transport.requests[0].data)
 
     def test_expired_session_refreshes_once(self):
         login = Login()

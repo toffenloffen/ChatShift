@@ -17,6 +17,16 @@ from audio_recorder import LANGUAGE_CODES
 
 TRANSCRIBE_URL = 'https://chatgpt.com/backend-api/transcribe'
 MAX_SECONDS = 30
+# Best-effort instruction: the internal service may ignore the prompt field.
+# Do not supply expected words or post-process the returned transcript.
+TRANSCRIPTION_PROMPT = (
+    'Transcribe only what the speaker actually says, verbatim. '
+    'Preserve the original words and every language switch, including foreign '
+    'words mixed into a sentence. Do not translate any words into the selected '
+    'language or another language. Do not paraphrase, correct grammar, replace '
+    'words with synonyms, or add words that were not spoken. '
+    'The selected language is a recognition hint, not an output translation target.'
+)
 
 
 class CloudError(ValueError):
@@ -128,7 +138,7 @@ def multipart(data, language):
     if language not in ('', *LANGUAGE_CODES.values()):
         raise CloudError('Ugyldig talespråk.')
     boundary = 'chatshift-' + secrets.token_hex(16)
-    chunks = []
+    chunks = [f'--{boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\n{TRANSCRIPTION_PROMPT}\r\n'.encode('utf-8')]
     if language:
         chunks.append(f'--{boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\n{language}\r\n'.encode())
     chunks.extend([

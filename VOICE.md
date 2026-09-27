@@ -10,6 +10,12 @@ Recording stops on release, a second press, or after 30 seconds. Audio is sent t
 OpenAI when recording stops; the recognized text is translated when languages differ.
 Review the inserted draft before sending. Keep the field focused until it finishes.
 
+Every dictation request includes a verbatim-transcription prompt asking the service
+to preserve spoken words and language switches without translating or rewriting.
+Support for this prompt field in the internal service is unverified; it is not a
+guarantee of verbatim output. ChatShift does not rewrite the returned transcript
+before passing it to the separate text translator.
+
 The local Mic Test monitors the microphone with optional noise suppression. The
 Speech and translation test lets you listen to original and processed audio. When
 text testing is enabled, it uploads the recording after Stop, shows both texts,
