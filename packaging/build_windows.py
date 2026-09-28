@@ -1,4 +1,4 @@
-"""Build cloud voice from a minimal environment without local speech engines."""
+"""Build local and experimental online voice without bundling Whisper model files."""
 from importlib.metadata import distributions
 import os
 from pathlib import Path
@@ -7,8 +7,9 @@ import subprocess
 import sys
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'norsk engelsk'
-LEGACY = {'local_voice', 'local_translator', 'model_setup'}
-ENGINES = ('faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub')
+sys.path.insert(0, str(APP))
+LEGACY = {'local_translator', 'model_setup'}
+ENGINES = ()
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
     for module in APP.glob('*.py'):
         if module.stem not in LEGACY:
             args += ['--hidden-import', module.stem]
-    for package in ('sounddevice', '_sounddevice_data', 'deepfilter_stream', 'soxr', 'onnxruntime', 'aiortc', 'av'):
+    for package in ('sounddevice', '_sounddevice_data', 'deepfilter_stream', 'soxr', 'onnxruntime', 'aiortc', 'av', 'faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub'):
         args += ['--collect-all', package]
     args += [str(ROOT / 'packaging/launcher.py')]
     environment = os.environ.copy()

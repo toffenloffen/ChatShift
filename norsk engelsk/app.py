@@ -109,6 +109,16 @@ class App:
         style.map('Accent.TButton', background=[('active', '#a9f4db'), ('disabled', '#355449')],
                   foreground=[('disabled', '#819e93')])
         style.configure('Small.TButton', font=('Segoe UI', 9), padding=(9, 5))
+        style.configure('ModelPicker.TButton', background='#203047', foreground=TEXT,
+                        font=('Segoe UI', 12), padding=(14, 12), anchor='w',
+                        borderwidth=1, bordercolor=BORDER, lightcolor=BORDER, darkcolor=BORDER)
+        style.map('ModelPicker.TButton', background=[('active', '#293e58')],
+                  bordercolor=[('active', ACCENT)])
+        style.configure('Models.TFrame', background=CARD)
+        style.configure('Models.TLabelframe', background=CARD, bordercolor=BORDER,
+                        lightcolor=BORDER, darkcolor=BORDER, borderwidth=1, relief='solid')
+        style.configure('Models.TLabelframe.Label', background=CARD, foreground=ACCENT,
+                        font=('Segoe UI', 11, 'bold'))
         style.configure('TNotebook', background=CARD, borderwidth=0,
                         bordercolor=BORDER, lightcolor=BORDER, darkcolor=BORDER)
         style.configure('TNotebook.Tab', background='#252a3e', foreground=MUTED, padding=(18, 7))
@@ -348,6 +358,7 @@ class App:
         self.stop_button.pack(side='left', padx=10)
         tk.Label(outer, text='Uses your ChatGPT sign-in · Internet required\nMessages go to OpenAI and use your Codex allowance.',
                  bg=BG, fg=MUTED, font=('Segoe UI', 9), justify='left').pack(anchor='w')
+        self.bind_settings_scroll(viewport)
         root.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = root.after(25, self.poll)
         self.voice.configure()
@@ -372,6 +383,34 @@ class App:
                         'Could not start the translator. Restart ChatShift.'))
             threading.Thread(target=load, daemon=True).start()
 
+    def bind_settings_scroll(self, viewport):
+        viewport.configure(yscrollincrement=20)
+        tag = 'ChatShiftSettingsWheel'
+        remainder = 0.0
+
+        def scroll(event):
+            nonlocal remainder
+            remainder -= event.delta / 120 * 3
+            steps = int(remainder)
+            remainder -= steps
+            if steps:
+                viewport.yview_scroll(steps, 'units')
+            return 'break'
+
+        self.root.bind_class(tag, '<MouseWheel>', scroll)
+
+        def attach(widget):
+            if isinstance(widget, tk.Toplevel):
+                return
+            tags = widget.bindtags()
+            # Handle the wheel before ttk's class bindings: scrolling over a
+            # closed language/microphone picker must not change its selection.
+            widget.bindtags((tags[0], tag, *tags[1:]))
+            for child in widget.winfo_children():
+                attach(child)
+
+        attach(self.root)
+
     def swap_text_languages(self):
         source, target = self.source_language.get(), self.language.get()
         self.source_language.set(target)
@@ -394,7 +433,7 @@ class App:
                               voice_auto_send=self.voice.auto_send.get(),
                               voice_source_language=self.voice.source_language.get(),
                               voice_target_language=self.voice.target_language.get(),
-                              voice_backend='cloud', noise_enabled=self.voice.noise_enabled.get(),
+                              voice_backend='cloud', voice_model=self.voice.model_choice.get(), noise_enabled=self.voice.noise_enabled.get(),
                               noise_strength=self.voice.noise_strength.get(),
                               noise_threshold=self.voice.noise_threshold.get())
             except OSError:

@@ -15,20 +15,27 @@ MODEL_DIRECTORY = MODELS / 'voice'
 
 
 class LocalTranscriber:
-    def __init__(self):
+    def __init__(self, size='small'):
+        if size not in ('small', 'medium', 'turbo'):
+            raise ValueError('Unknown local speech model.')
         from faster_whisper import WhisperModel
-        self.model = WhisperModel('small', device='cpu', compute_type='int8',
+        self.model = WhisperModel(size, device='cpu', compute_type='int8',
                                   cpu_threads=4, num_workers=1,
                                   download_root=str(MODEL_DIRECTORY))
 
-    def transcribe(self, audio, language):
+    def transcribe(self, audio, language, cancel=None):
         if language not in LANGUAGE_CODES:
             raise ValueError('Choose a supported spoken language.')
         segments, _ = self.model.transcribe(audio, language=LANGUAGE_CODES[language],
             beam_size=3, vad_filter=True, condition_on_previous_text=False,
             hotwords=SPEECH_GAMING_HINTS,
             vad_parameters={'min_silence_duration_ms': 350})
-        text = ' '.join(segment.text.strip() for segment in segments).strip()
+        parts = []
+        for segment in segments:
+            if cancel is not None and cancel.is_set():
+                raise ValueError('Voice cancelled.')
+            parts.append(segment.text.strip())
+        text = ' '.join(parts).strip()
         if not text:
             raise ValueError('No speech detected. Check your microphone and try again.')
         return text

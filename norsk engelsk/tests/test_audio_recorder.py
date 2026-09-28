@@ -45,3 +45,15 @@ class RecorderTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 recorder.stop()
             self.assertEqual(recorder.chunks, [])
+
+    def test_recording_does_not_stop_at_30_seconds_or_wait_for_driver_clock(self):
+        with patch('sounddevice.InputStream') as factory:
+            recorder = Recorder()
+            recorder.start()
+            capture = factory.call_args.kwargs['callback']
+            for _ in range(40):
+                capture(np.zeros((16000, 1), dtype=np.float32), 16000, None, False)
+            self.assertFalse(recorder.full.is_set())
+            self.assertEqual(len(recorder.stop()), 40 * recorder.RATE)
+            factory.return_value.stop.assert_called_once()
+            factory.return_value.close.assert_called_once()

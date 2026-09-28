@@ -3,6 +3,41 @@ from keyboard_preview import highlighted_keys, ShortcutDraft
 
 
 class KeyboardPreviewTests(unittest.TestCase):
+    def test_every_key_hits_itself_at_each_display_size(self):
+        import tkinter as tk
+        from types import SimpleNamespace
+        from keyboard_preview import KeyboardMousePreview
+        root = tk.Tk()
+        picked = []
+        preview = KeyboardMousePreview(root, on_pick=lambda key, combo: picked.append(key))
+        preview.pack(fill='x')
+        try:
+            for width in (400, 600, 755, 950):
+                root.geometry(f'{width}x200'); root.update(); preview.draw()
+                self.assertEqual(len({b[4] for b in preview.regions}), len(preview.regions))
+                for left, top, right, bottom, key in preview.regions:
+                    for x,y in (((left+right)/2,(top+bottom)/2),
+                                (left+1,top+1),(right-1,bottom-1)):
+                        picked.clear()
+                        preview.clicked(SimpleNamespace(x=x,y=y,state=0))
+                        self.assertEqual(picked,[key], (width,key,x,y))
+        finally:
+            root.destroy()
+
+    def test_every_controller_button_hits_itself(self):
+        import tkinter as tk
+        from types import SimpleNamespace
+        from controller_preview import ControllerPreview
+        root=tk.Tk(); picked=[]
+        preview=ControllerPreview(root,picked.append)
+        try:
+            for name,(left,top,right,bottom,_,_) in preview.buttons.items():
+                picked.clear()
+                preview.click_picture(SimpleNamespace(x=(left+right)/2,y=(top+bottom)/2))
+                self.assertEqual(picked,[name])
+        finally:
+            root.destroy()
+
     def test_default_marks_right_control_and_enter_only(self):
         self.assertEqual(highlighted_keys(None), {0xA3, 13})
 

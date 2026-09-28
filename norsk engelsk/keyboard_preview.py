@@ -164,6 +164,49 @@ class MousePreview(KeyboardPreview):
         self.render_picture(120,176)
 
 
+
+def keyboard_mouse_regions():
+    """Keycap bounds traced on the 2048-wide reference, then mapped with the artwork."""
+    boxes = []
+    ratio = 2172 / 2048
+    def key(vk, left, top, right, bottom, mouse=False):
+        crop_x, crop_y, sx, sy, dx, dy = ((1886,135,87/246,137/413,656,12)
+            if mouse else (38,103,624/1796,164/479,9,2))
+        boxes.append(((left*ratio-crop_x)*sx+dx, (top*ratio-crop_y)*sy+dy,
+                      (right*ratio-crop_x)*sx+dx, (bottom*ratio-crop_y)*sy+dy, vk))
+    key(27,68,134,146,187)
+    for i,x in enumerate((188,262,336,408,516,589,663,736,843,918,995,1075)):
+        key(112+i,x,134,x+63,187)
+    for i,x in enumerate((143,217,291,365,439,512,586,660,734,808)):
+        key(ord(str((i+1)%10)),x,202,x+65,255)
+    key(8,1031,202,1144,255)
+    key(9,68,266,166,319)
+    for c,x in zip('QWERTYUIOP',(178,252,326,400,474,548,622,696,770,844)):
+        key(ord(c),x,266,x+64,319)
+    key(13,1010,330,1144,383)
+    for c,x in zip('ASDFGHJKL',(198,272,346,420,494,568,642,716,790)):
+        key(ord(c),x,330,x+64,383)
+    key(0xA0,68,394,227,447); key(0xA1,972,394,1144,447)
+    for c,x in zip('ZXCVBNM',(238,311,385,459,533,607,681)):
+        key(ord(c),x,394,x+64,447)
+    for vk,l,r in ((0xA2,68,158),(0xA4,262,349),(32,359,819),
+                   (0xA5,831,920),(0xA3,1032,1144)):
+        key(vk,l,458,r,514)
+    for top,keys in ((202,(45,36,33)),(266,(46,35,34)),(458,(37,40,39))):
+        for vk,x in zip(keys,(1175,1248,1323)): key(vk,x,top,x+63,top+53)
+    key(38,1248,394,1313,447)
+    for top,keys in ((266,(103,104,105)),(330,(100,101,102)),(394,(97,98,99))):
+        for vk,x in zip(keys,(1420,1493,1566)): key(vk,x,top,x+63,top+53)
+    for vk,l,t,r,b in ((111,1493,202,1554,255),(106,1566,202,1627,255),
+                        (109,1635,202,1695,255),(107,1635,266,1695,383),
+                        (NUMPAD_ENTER,1635,394,1695,514),(96,1420,458,1553,514),
+                        (110,1566,458,1627,514)):
+        key(vk,l,t,r,b)
+    key(4,1883,169,1905,232,True)
+    key(6,1785,271,1803,324,True)
+    key(5,1785,334,1803,386,True)
+    return boxes
+
 class KeyboardMousePreview(KeyboardPreview):
     """One shared reference image and matching hit areas for both chat modes."""
     def __init__(self, parent, binding=None, on_pick=None, on_finish=None):
@@ -183,32 +226,7 @@ class KeyboardMousePreview(KeyboardPreview):
         from PIL import Image, ImageDraw, ImageTk
         self.delete('all')
         active = highlighted_keys(self.binding) if self.selection is None else self.selection
-        boxes = []
-        def key(vk, x, y, w=25, h=22):
-            boxes.append((x, y, x+w, y+h, vk))
-        key(27,18,12,29)
-        for i,x in enumerate((62,90,118,146,184,212,240,268,305,333,361,389)):
-            key(112+i,x,12)
-        for i in range(10): key(ord(str((i+1)%10)),45+i*27.7,37)
-        key(8,374,37,45)
-        key(9,18,61,39)
-        for i,c in enumerate('QWERTYUIOP'): key(ord(c),59+i*27.7,61)
-        key(13,369,85,50)
-        for i,c in enumerate('ASDFGHJKL'): key(ord(c),66+i*27.7,85)
-        key(0xA0,18,109,59); key(0xA1,353,109,66)
-        for i,c in enumerate('ZXCVBNM'): key(ord(c),79+i*27.7,109)
-        for vk,x,w in ((0xA2,18,34),(0xA4,90,33),(32,125,174),(0xA5,302,34),(0xA3,379,40)):
-            key(vk,x,133,w)
-        for y,keys in ((37,(45,36,33)),(61,(46,35,34)),(133,(37,40,39))):
-            for i,vk in enumerate(keys): key(vk,429+27.5*i,y)
-        key(38,457,109)
-        for y,keys in ((61,(103,104,105)),(85,(100,101,102)),(109,(97,98,99))):
-            for i,vk in enumerate(keys): key(vk,520+27.7*i,y)
-        for vk,x,y,w,h in ((111,548,37,25,22),(106,576,37,25,22),(109,604,37,22,22),
-                             (107,604,61,22,46),(NUMPAD_ENTER,604,109,22,46),
-                             (96,520,133,53,22),(110,576,133,25,22),
-                             (4,692,25,12,26),(6,657,61,9,24),(5,657,86,9,25)):
-            key(vk,x,y,w,h)
+        boxes = keyboard_mouse_regions()
         width=max(1,self.winfo_width())
         scale=min(1.0,width/self.artwork.width) if width>1 else 1.0
         frame=self.artwork.copy()
@@ -223,5 +241,6 @@ class KeyboardMousePreview(KeyboardPreview):
         if size!=frame.size: frame=frame.resize(size,Image.Resampling.LANCZOS)
         self.rendered=ImageTk.PhotoImage(frame,master=self)
         self.create_image(0,0,image=self.rendered,anchor='nw')
-        self.regions=[(a*scale,b*scale,c*scale,d*scale,k) for a,b,c,d,k in boxes]
+        sx, sy = size[0]/self.artwork.width, size[1]/self.artwork.height
+        self.regions=[(a*sx,b*sy,c*sx,d*sy,k) for a,b,c,d,k in boxes]
         if int(self.cget('height'))!=size[1]: self.configure(height=size[1])

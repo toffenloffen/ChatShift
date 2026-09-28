@@ -16,6 +16,9 @@ def load_settings(path=SETTINGS_PATH):
     try:
         data = json.loads(path.read_text(encoding='utf-8'))
         if isinstance(data, dict):
+            from speech_models import MODELS
+            if data.get('voice_model') in MODELS:
+                result['voice_model'] = data['voice_model']
             if data.get('source_language') in LANGUAGES:
                 result['source_language'] = data['source_language']
             if data.get('target_language') in LANGUAGES:
@@ -35,6 +38,9 @@ def load_settings(path=SETTINGS_PATH):
                 result['voice_backend'] = 'cloud'
             if isinstance(data.get('voice_enabled'), bool):
                 result['voice_enabled'] = data['voice_enabled']
+            if data.get('voice_model') == 'dictation':
+                # The removed engine must not silently activate a different one.
+                result['voice_enabled'] = False
             if isinstance(data.get('voice_auto_send'), bool):
                 result['voice_auto_send'] = data['voice_auto_send']
             if isinstance(data.get('noise_enabled'), bool):
@@ -53,7 +59,7 @@ def load_settings(path=SETTINGS_PATH):
 def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source_language='Norwegian', text_enabled=True,
                   voice_shortcut=None, voice_enabled=False, voice_mode='hold', voice_auto_send=False,
                   noise_enabled=False, noise_strength=50, noise_threshold=-50, voice_backend=None,
-                  voice_source_language=None, voice_target_language=None):
+                  voice_source_language=None, voice_target_language=None, voice_model='realtime'):
     voice_source_language = voice_source_language or source_language
     voice_target_language = voice_target_language or language
     if voice_source_language not in LANGUAGES or voice_target_language not in LANGUAGES:
@@ -69,6 +75,7 @@ def save_settings(language, auto_send, path=SETTINGS_PATH, shortcut=None, source
                                     'voice_shortcut': validate_binding(voice_shortcut or {'modifiers': [], 'key': None}),
                                     'voice_enabled': bool(voice_enabled), 'voice_mode': voice_mode,
                                     'voice_backend': voice_backend,
+                                    'voice_model': voice_model,
                                     'voice_auto_send': bool(voice_auto_send),
                                     'noise_enabled': bool(noise_enabled),
                                     'noise_strength': max(0, min(100, float(noise_strength))),

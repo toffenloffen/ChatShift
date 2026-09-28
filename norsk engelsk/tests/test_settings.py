@@ -9,7 +9,7 @@ class SettingsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'settings.json'
             save_settings('French', False, path)
-            self.assertEqual(load_settings(path), {'source_language': 'Norwegian', 'target_language': 'French', 'auto_send': False, 'voice_source_language': 'Norwegian', 'voice_target_language': 'French', 'shortcut': None, 'text_enabled': True,
+            self.assertEqual(load_settings(path), {'source_language': 'Norwegian', 'target_language': 'French', 'auto_send': False, 'voice_model': 'realtime', 'voice_source_language': 'Norwegian', 'voice_target_language': 'French', 'shortcut': None, 'text_enabled': True,
                 'voice_shortcut': {'modifiers': [], 'key': None}, 'voice_enabled': False, 'voice_mode': 'hold', 'voice_auto_send': False,
                 'noise_enabled': False, 'noise_strength': 50, 'noise_threshold': -50})
 
@@ -31,6 +31,17 @@ class SettingsTests(unittest.TestCase):
             path = Path(folder) / 'settings.json'
             save_settings('English', False, path, text_enabled=False)
             self.assertFalse(load_settings(path)['text_enabled'])
+
+    def test_removed_dictation_does_not_automatically_enable_another_engine(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            save_settings('German', True, path, voice_model='dictation',
+                          voice_enabled=True, voice_backend='cloud')
+            saved = load_settings(path)
+            self.assertFalse(saved['voice_enabled'])
+            self.assertNotIn('voice_model', saved)
+            self.assertEqual(saved['target_language'], 'German')
+            self.assertTrue(saved['text_enabled'])
 
     def test_source_language_survives_restart_and_old_settings_migrate(self):
         with tempfile.TemporaryDirectory() as folder:

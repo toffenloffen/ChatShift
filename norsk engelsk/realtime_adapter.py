@@ -31,7 +31,7 @@ class FrameFeeder:
 
 class LiveRecorder:
     RATE=48000
-    MAX_SECONDS=30
+    MAX_SECONDS=None
 
     def __init__(self,language,noise,cancel):
         self.language=language;self.noise=noise;self.cancel=cancel
@@ -69,10 +69,11 @@ class LiveRecorder:
         def capture(data,frames,timestamp,status):
             if self.stop_event.is_set() or self.cancel.is_set():return
             self.overflow |= bool(status)
-            remaining=self.RATE*self.MAX_SECONDS-self.samples
+            remaining=(self.RATE*self.MAX_SECONDS-self.samples
+                       if self.MAX_SECONDS is not None else len(data))
             if remaining>0:
                 audio=data[:remaining,0].copy();self.incoming.put(audio);self.samples+=len(audio)
-            if self.samples>=self.RATE*self.MAX_SECONDS:
+            if self.MAX_SECONDS is not None and self.samples>=self.RATE*self.MAX_SECONDS:
                 self.full.set();self.stop_event.set()
         try:
             self.stream=sd.InputStream(device=device,samplerate=self.RATE,blocksize=512,

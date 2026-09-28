@@ -15,8 +15,9 @@ python -m venv .build-env
 
 Pass the path to `ISCC.exe` as the optional argument to `build_windows.py` if it
 is not under Program Files (x86). Output: `dist/ChatShift-Setup.exe`.
-The Python runtime and dependencies are bundled; the two voice models download in
-the graphical welcome window. The dependency/model preparations never record audio.
+The Python runtime, speech-engine dependencies and DeepFilter noise models are bundled.
+Optional Whisper models download only when a selected local engine is first used.
+Opening the welcome window and self-tests never record audio or contact a speech service.
 Codex is external, and installation/sign-in are explicitly guided, never automated.
 
 For an isolated test while another ChatShift is running, compile the same payload
@@ -26,12 +27,13 @@ with a distinct registration ID and output filename:
 ISCC.exe /DAppIdValue=ChatShift.IsolatedInstallerTest /DGroupNameValue=ChatShiftInstallerVerification /FChatShift-Test-Setup packaging/ChatShift.iss
 ```
 
-Install that test EXE with `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOICONS`
-and an absolute `/DIR=` pointing inside a disposable workspace. The production
+Run `packaging/test_installer.ps1` for install, update and uninstall checks in a
+disposable workspace. Its distinct Start Menu and desktop shortcut names leave
+the regular ChatShift shortcuts alone. The production
 installer refuses updates while ChatShift holds its existing single-instance mutex.
 Use `CHATSHIFT_DATA_DIR` to put test settings/models inside the workspace. The
-installed executable accepts `--self-test` (dependencies, assets, Tk, 26 languages)
-and `--test-models` (also downloads/checks both models). They exit without starting
+installed executable accepts `--self-test` (dependencies, assets, DeepFilter, Tk,
+26 languages and the five selectable speech models). It exits without starting
 the translator, recording the microphone or installing keyboard hooks. JSON results
 and failure logs go to the selected data directory. Normal consumers use no switches.
 
@@ -41,8 +43,8 @@ The offline suite uses its own actual Windows mutex so the running app is unaffe
 Do not run the regular test suite against an actively used chat field.
 
 The CI workflow uses `test_installer.ps1 -Production` only inside its disposable
-Windows VM to verify the exact `ChatShift-Setup.exe` offered for review. It also
-downloads both models and transcribes a locally synthesized PCM test sentence.
+Windows VM to verify the exact `ChatShift-Setup.exe` offered for review. These checks
+do not establish live speech quality or subscription access.
 Use the default isolated identity when testing on a personal development PC.
 
 Settings and model caches live in `%LOCALAPPDATA%/ChatShift`, and uninstall deliberately
@@ -50,12 +52,7 @@ leaves them intact. Source-install settings remain where they were; no private d
 is searched for or copied. To migrate preferences deliberately, close both versions
 and copy only `.settings.json` and `.controller.json` into that data directory.
 
-Publication is a separate review step. Review `COMPONENTS.md`, exact dependency
-inventory, retained sources and the lazy file-decoder patch. The consumer package
-excludes PyAV/FFmpeg and tests actual NumPy PCM speech transcription without them.
-This branch does not publish, upload releases or change the existing release URL.
-GitHub Actions creates review artifacts on this branch; it does not publish a release.
-On the development PC, Windows application control blocked Inno Setup's temporary
-executable with error 4551 before installation. Do not disable application control
-to test. Use the isolated CI result and resolve release signing before deployment
-to a device whose application-control policy requires it.
+Publication is a separate, user-authorized step. Review `COMPONENTS.md`, the exact
+dependency inventory, retained sources and installer results before uploading.
+GitHub Actions creates review artifacts; it does not automatically publish a release.
+Do not disable Windows security controls if a device blocks the unsigned installer.

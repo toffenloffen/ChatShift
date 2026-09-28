@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import io
 import json
+from datetime import datetime, timezone
 import queue
+import re
 import secrets
 import subprocess
 import threading
@@ -14,9 +16,11 @@ import wave
 
 from codex_translator import find_codex
 from audio_recorder import LANGUAGE_CODES
+from app_paths import DATA
 
 TRANSCRIBE_URL = 'https://chatgpt.com/backend-api/transcribe'
-MAX_SECONDS = 30
+DICTATION_TAIL_SAMPLES = 14400  # 0.9 seconds of silence at 16 kHz.
+_DIAGNOSTIC_LOCK = threading.Lock()
 # Best-effort instruction: the internal service may ignore the prompt field.
 # Do not supply expected words or post-process the returned transcript.
 TRANSCRIPTION_PROMPT = (
@@ -31,6 +35,42 @@ TRANSCRIPTION_PROMPT = (
 
 class CloudError(ValueError):
     pass
+
+
+def record_http_result(code, outcome, started, headers=None, *, backend='dictation', plan=None):
+    """Keep the last 30 HTTP outcomes locally, never audio, text or credentials."""
+    entry = {
+        'time_utc': datetime.now(timezone.utc).isoformat(),
+        'status': code,
+        'outcome': outcome,
+        'elapsed_ms': round((time.monotonic() - started) * 1000),
+    }
+    ray = (headers or {}).get('cf-ray', '')
+    if re.fullmatch(r'[0-9a-fA-F]{8,32}-[A-Z0-9]{3,6}', ray):
+        entry['cf_ray'] = ray
+    if backend == 'gpt-transcribe':
+        if isinstance(plan, str) and re.fullmatch(r'[a-z_]{1,30}', plan):
+            entry['account_plan'] = plan
+        filename = 'gpt-transcribe-http.json'
+    else:
+        filename = 'cloud-voice-http.json'
+    path = DATA / '.runtime' / filename
+    try:
+        with _DIAGNOSTIC_LOCK:
+            previous = []
+            if path.exists() and path.stat().st_size <= 32_768:
+                try:
+                    previous = json.loads(path.read_text(encoding='utf-8'))
+                    if not isinstance(previous, list):
+                        previous = []
+                except (ValueError, UnicodeError):
+                    pass
+            path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = path.with_suffix('.tmp')
+            temporary.write_text(json.dumps(previous[-29:] + [entry]), encoding='utf-8')
+            temporary.replace(path)
+    except OSError:
+        pass  # Diagnostics must never interrupt speech recognition.
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -124,8 +164,8 @@ def validate_wav(data):
             duration = audio.getnframes() / audio.getframerate()
             if audio.getsampwidth() != 2 or audio.getnchannels() != 1:
                 raise CloudError('Bruk en mono WAV-fil med 16-bit PCM.')
-            if not 0.3 <= duration <= MAX_SECONDS + 0.2:
-                raise CloudError('Opptaket må vare mellom 0,3 og 30 sekunder.')
+            if duration < 0.3:
+                raise CloudError('Opptaket må vare minst 0,3 sekunder.')
             expected = audio.getnframes() * 2
             if len(audio.readframes(audio.getnframes())) != expected:
                 raise CloudError('Lydfilen er ufullstendig.')
@@ -162,6 +202,7 @@ def transcribe(login, data, language='no', opener=None, cancel=None):
             'Content-Type': content_type, 'Accept': 'application/json',
             'User-Agent': 'ChatShift-Cloud-Voice/0.3',
         })
+        started = time.monotonic()
         try:
             with opener.open(request, timeout=45) as response:
                 payload = response.read(1_000_001)
@@ -171,22 +212,32 @@ def transcribe(login, data, language='no', opener=None, cancel=None):
             text = result.get('text') if isinstance(result, dict) else None
             if not isinstance(text, str) or not text.strip():
                 raise CloudError('Ingen tale ble gjenkjent. Prøv et tydeligere opptak.')
+            record_http_result(200, 'transcribed', started)
             return text.strip()
         except urllib.error.HTTPError as exc:
             code = exc.code
-            exc.close()
+            try:
+                challenge = (exc.headers or {}).get('cf-mitigated', '').lower() == 'challenge'
+                outcome = 'security_challenge' if challenge else 'http_rejected'
+                record_http_result(code, outcome, started, exc.headers)
+            finally:
+                exc.close()
+            if challenge:
+                raise CloudError(f'Cloud-forbindelsen ble stoppet av en sikkerhetskontroll ({code}).') from None
             if code == 401 and attempt == 0:
                 continue
             messages = {
                 401: 'ChatGPT-innloggingen ble avvist. Logg inn igjen i Codex.',
-                403: 'Taletjenesten avviste tilgangen (403). Gratisstøtte er ikke bekreftet.',
+                403: 'Cloud-tjenesten avviste forespørselen (403). Årsaken er ikke bekreftet.',
                 404: 'Appens interne talekall er ikke tilgjengelig (404).',
                 429: 'Talegrensen er nådd (429). Vent før du prøver igjen.',
             }
             raise CloudError(messages.get(code, f'Taletjenesten svarte med HTTP {code}.')) from None
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            record_http_result(None, 'network_error', started)
             raise CloudError('Nettverksfeil eller tidsavbrudd ved talegjenkjenning.') from None
         except (json.JSONDecodeError, UnicodeError) as exc:
+            record_http_result(200, 'invalid_response', started)
             raise CloudError('Taletjenesten returnerte et ukjent svarformat.') from None
         finally:
             token = None
@@ -210,18 +261,26 @@ class CloudTranscriber:
         samples = np.asarray(audio, dtype=np.float32)
         if samples.ndim != 1 or not np.isfinite(samples).all():
             raise CloudError('Invalid microphone audio.')
+        if samples.size < 4800:
+            raise CloudError('Opptaket må vare minst 0,3 sekunder.')
         buffer = io.BytesIO()
         with wave.open(buffer, 'wb') as wav:
             wav.setnchannels(1)
             wav.setsampwidth(2)
             wav.setframerate(16000)
             wav.writeframes((np.clip(samples, -1, 1) * 32767).astype('<i2').tobytes())
+            # Extend only the uploaded file, without recording or sleeping longer.
+            # Leave room for the recognizer to finish the last spoken word.
+            wav.writeframes(b'\0\0' * DICTATION_TAIL_SAMPLES)
         data = buffer.getvalue()
         validate_wav(data)
         if cancel is not None and cancel.is_set():
             raise CloudError('Voice cancelled.')
         login = CodexLogin()
         try:
-            return transcribe(login, data, LANGUAGE_CODES[language], cancel=cancel)
+            return self._transcribe_wav(login, data, LANGUAGE_CODES[language], cancel)
         finally:
             login.close()
+
+    def _transcribe_wav(self, login, data, language, cancel):
+        return transcribe(login, data, language, cancel=cancel)

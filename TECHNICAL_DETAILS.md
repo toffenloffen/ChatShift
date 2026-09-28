@@ -24,9 +24,13 @@
 
 ## Privacy and usage
 
-Text captured by the translation shortcut and streaming microphone audio are sent to OpenAI. In Among Us, a visible
+Text captured by the translation shortcut is sent to OpenAI. Local Whisper recognizes
+speech on the PC; the experimental online models send audio to OpenAI. In Among Us, a visible
 game frame is captured in memory and cropped to the outgoing field and character counter
-for local Windows OCR. Images are not saved or uploaded; incoming chat is not translated. Codex manages sign-in. Realtime voice uses managed Codex app-server WebRTC; ChatShift does not extract credentials. Local app-server commands use stdin/stdout pipes.
+for local Windows OCR. Images are not saved or uploaded; incoming chat is not translated.
+Codex manages sign-in. GPT-Live uses app-server WebRTC. GPT-Transcribe obtains a temporary
+managed access token through app-server for each request and does not save it.
+Local app-server commands use stdin/stdout pipes. See [voice details](VOICE.md).
 The OpenAI service processes the text according to your account's data settings.
 
 Recent messages and translations exist in memory: a model session is rotated after five

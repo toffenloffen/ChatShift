@@ -6,8 +6,8 @@ Write or speak in your own language. ChatShift translates your message directly
 into your game or app's chat field, so you can join the conversation without
 switching to a translation window.
 
-**Text translation tested with a free ChatGPT account — no API key needed.**
-Cloud voice is experimental; free-account voice access has not been verified.
+**Use your ChatGPT sign-in through Codex — no API key to enter.**
+Online voice models are experimental. I am looking for Plus-account testers.
 
 I'm **[toffenloffen](https://github.com/toffenloffen)**. I created ChatShift to make chatting easier
 when writing in another language is difficult.
@@ -22,44 +22,45 @@ when writing in another language is difficult.
 
 **[Download ChatShift for Windows](https://github.com/toffenloffen/ChatShift/releases/latest/download/ChatShift-Setup.exe)**
 
-**New: streaming voice, with local noise suppression included.**
-No ZIP extraction, Python installation or Whisper download is needed.
+**New: choose local or experimental online voice recognition.**
+Local noise suppression is included. No ZIP extraction or Python installation is needed.
 
 1. Open **ChatShift-Setup.exe** and follow the installer.
 2. Read the welcome screen and click **Open ChatShift**.
 3. Sign in to Codex with your own ChatGPT account, then choose languages in
    **Text**, **Voice**, and **Controller** separately. **⇄** swaps each pair.
-4. Enable Voice, choose your microphone and try **Speech and translation test**.
+4. In **Voice → AI models**, choose a model and click **Activate selected model**.
+   Enable Voice, choose your microphone and try **Speech and translation test**.
 
 Internet and a ChatGPT account with access to the required Codex models are needed.
-**No API key or separate API billing setup. Free-account access to the new voice
-feature is not yet verified.** The earlier free-account test below covers text only.
+The current sign-in path does not require you to enter an API key or configure
+separate API billing. Account access and usage limits still apply.
 
-## Why I changed voice recognition
+## Voice model choices
 
-In my tests, streaming recognition handled my Norwegian dialect better than the
-previous solution. Audio is processed while I speak, then the transcript goes to
-Luna for translation. Choosing the same voice input and output language keeps the
-transcript without translation. ChatShift uses the recognized speech, not an AI reply.
+| Model | How it works |
+|---|---|
+| Whisper Small · local | Speech recognition on your CPU; the smallest local option. |
+| Whisper Medium · local | Larger local model, with higher memory use. |
+| Whisper Large Turbo · local | Large local model; speed depends on your PC. |
+| GPT-Live · Experimental | Streams audio while you speak. |
+| GPT-Transcribe · Experimental | Sends the recording after you stop. |
 
-This also removes the local Whisper workload and its large speech-model download.
-**DeepFilter noise suppression stays local** and cleans the audio before streaming.
-Recognition can still make mistakes; speed depends on the connection and account.
-The cloud voice integration is experimental. See [voice details](VOICE.md).
+Only one speech model is active at a time. Local Whisper files download on first use.
+The older **ChatGPT dictation · cloud** option has been removed after repeated access
+errors. **DeepFilter noise suppression stays available** before speech recognition.
+
+In my tests, online recognition handled my Norwegian dialect better, but speed and
+accuracy vary. The transcript goes to the existing Luna translator. Choosing the
+same Voice input and output language keeps the transcript without translation.
+Text translation is unchanged. See [voice details](VOICE.md).
+
+**Plus testers wanted:** I have used the online options with my Pro account.
+Plus-account access in this integration is still unverified. If you already have
+Plus and try it, please report the selected model and whether transcription works,
+or the exact error code. You do not need to buy a subscription to help test local voice.
 
 [Setup help](GET_STARTED.md)
-
-## How much can you chat on a free account?
-
-In my test on **26 September 2026**, I used a new **free ChatGPT account**
-to translate **34 messages — 479 words over about 39 minutes** while chatting
-on Twitch and with Google AI. My displayed remaining allowance went from **100% to 99%**.
-The message and word counts exclude ChatShift's automatic warmup request.
-
-At that rate, my rough estimate for a full allowance is **48,000 words, 3,400 messages,
-or 65 hours at the same writing pace**. These are projections from my test,
-not guaranteed limits or a daily allowance. Free-account Codex access and usage limits
-depend on OpenAI's current availability and account limits.
 
 ## What you can do
 
@@ -67,7 +68,7 @@ depend on OpenAI's current availability and account limits.
 - **Type or speak:** translate written messages or use your microphone.
 - **Keep chatting where you play:** use keyboard or mouse shortcuts while ChatShift runs in the background.
 - **Review or send automatically:** choose separately for text and voice.
-- **Streaming cloud dictation:** no local speech-model download. See [voice help](VOICE.md).
+- **Local or online speech recognition:** activate one model in Voice. See [voice help](VOICE.md).
 - **Use the same language** for spelling correction or voice dictation.
 
 ## Using it in a game
@@ -83,9 +84,10 @@ See [game compatibility](COMPATIBILITY.md) for details.
 
 ## Privacy and availability
 
-While recording, microphone audio is streamed to OpenAI. Translation also uses
-OpenAI through your Codex sign-in. ChatShift does not save recordings or transcripts
-to disk. The experimental Codex voice connection can change or become unavailable.
+Local Whisper keeps speech recognition on your PC. The online models send audio to
+OpenAI, while translation uses OpenAI through your Codex sign-in. ChatShift does not
+save recordings or transcripts to disk. Experimental online connections can change
+or become unavailable; they are not a guarantee of subscription compatibility.
 ChatShift is an independent project, not an official OpenAI product.
 
 This is an **early Windows release**, free to use. A SteamOS version is in development;

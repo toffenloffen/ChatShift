@@ -12,9 +12,9 @@ LANGUAGE_CODES = dict(zip(
 
 
 class Recorder:
-    """Bounded mono recorder. Constructing it never opens a microphone."""
+    """User-controlled mono recorder. Constructing it never opens a microphone."""
     RATE = 16000
-    MAX_SECONDS = 30
+    MAX_SECONDS = None
 
     def __init__(self):
         self.stream = None
@@ -34,7 +34,8 @@ class Recorder:
 
         def capture(data, frames, timestamp, status):
             self.overflow |= bool(status)
-            remaining = self.RATE * self.MAX_SECONDS - self.samples
+            remaining = (self.RATE * self.MAX_SECONDS - self.samples
+                         if self.MAX_SECONDS is not None else len(data))
             if remaining > 0:
                 chunk = data[:remaining, 0].copy()
                 self.chunks.append(chunk)
@@ -42,7 +43,7 @@ class Recorder:
                 import numpy as np
                 level = float(20*np.log10(max(1e-6, float(np.sqrt(np.mean(chunk**2))))))
                 self.levels.put((level, level))
-            if self.samples >= self.RATE * self.MAX_SECONDS:
+            if self.MAX_SECONDS is not None and self.samples >= self.RATE * self.MAX_SECONDS:
                 self.full.set()
                 raise sd.CallbackStop
 

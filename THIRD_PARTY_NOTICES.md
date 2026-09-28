@@ -2,19 +2,19 @@
 
 The Windows Setup.exe includes a separate Python runtime and native dependencies.
 Its `licenses` directory contains installed distribution licenses, metadata, a
-version inventory, Python's license, and verified source archives for soxr and
-faster-whisper. A documented MIT-licensed faster-whisper patch defers its optional
-PyAV file decoder imports. ChatShift uses NumPy microphone arrays; its frozen
-consumer package excludes PyAV and FFmpeg entirely. See `packaging/COMPONENTS.md`
-for the exact modification, upstream source and replaceable-library instructions.
-Whisper small (OpenAI/SYSTRAN faster-whisper conversion, MIT) is downloaded on first
-setup from https://huggingface.co/Systran/faster-whisper-small. Its model card and
-license are available there. DeepFilterNet3 attribution follows below.
+version inventory, Python's license, and the source archive for soxr.
+The current package includes faster-whisper, CTranslate2, aiortc, PyAV and their
+native dependencies. Installed distribution notices and WebRTC/FFmpeg attribution
+are retained under `licenses`. See `packaging/COMPONENTS.md` for the current bundle.
+Optional Whisper models (OpenAI/SYSTRAN and other faster-whisper conversions) download
+from Hugging Face when the selected model is first used. Model cards and their
+licenses remain available with those repositories. No Whisper weights are bundled.
+DeepFilterNet3 attribution follows below.
 
 Voice noise suppression now uses deepfilter-stream 0.1.0 (MIT) and its
 DeepFilterNet3 torchDF streaming ONNX export, dfn3-512-v1 (MIT/Apache-2.0;
-MIT option selected). The model is downloaded by the installed package with
-SHA-256 verification. Model and original-author attribution are retained in
+MIT option selected). The model is downloaded during the build with SHA-256
+verification and bundled for use. Model and original-author attribution are retained in
 third_party_licenses/deepfilter, together with full installed dependency notices.
 Sources: https://github.com/wuxuedaifu/deepfilter-stream and
 https://github.com/Rikorose/DeepFilterNet.

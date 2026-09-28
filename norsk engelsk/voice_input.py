@@ -64,6 +64,10 @@ class VoiceInput:
         self.hint = tk.StringVar(value='Open the game chat first. Voice fills the field; you send it yourself.')
         self.events = queue.Queue()
         self.model = None
+        from speech_models import MODELS
+        selected = saved.get('voice_model', 'realtime')
+        self.model_choice = tk.StringVar(value=selected if selected in MODELS else 'realtime')
+        self.model_label = tk.StringVar(value=MODELS[self.model_choice.get()][0])
         self.loading = False
         self.recording = False
         self.processing = False
@@ -74,6 +78,9 @@ class VoiceInput:
         self.devices = {'System default microphone': None}
 
     def build(self, parent):
+        ttk.Button(parent, text='AI models', style='ModelPicker.TButton',
+                   command=self.choose_model).pack(anchor='w', pady=(4, 5))
+        ttk.Label(parent, textvariable=self.model_label).pack(anchor='w', pady=(0, 8))
         ttk.Radiobutton(parent, text='Push to talk', variable=self.mode, value='hold', command=self.changed).pack(anchor='w')
         ttk.Radiobutton(parent, text='Press to start · press again to stop', variable=self.mode, value='toggle', command=self.changed).pack(anchor='w')
         ttk.Checkbutton(parent, text='Send voice messages automatically', variable=self.auto_send,
@@ -99,12 +106,52 @@ class VoiceInput:
         self.device_picker.bind('<<ComboboxSelected>>', lambda event: self.abort('Microphone changed.'))
         cleanup = tk.Frame(parent, bg=parent.cget('background'))
         cleanup.pack(fill='x', pady=8)
-        ttk.Label(cleanup, text='Cloud dictation · audio is sent to OpenAI while you speak.\nExperimental · ChatGPT sign-in and internet required; account limits apply.', wraplength=600).pack(anchor='w')
+        ttk.Label(cleanup, text='Choose a speech engine under AI models.\nNoise suppression runs locally before speech recognition.', wraplength=600).pack(anchor='w')
         ttk.Checkbutton(cleanup, text='Noise suppression (DeepFilterNet3)', variable=self.noise_enabled,
                         command=self.noise_changed).pack(anchor='w')
         from mic_monitor import MicMonitor
         self.monitor = MicMonitor(self, cleanup)
         ttk.Label(parent, textvariable=self.hint, wraplength=600).pack(anchor='w', pady=8)
+
+    def choose_model(self):
+        from speech_models import MODELS, get_model
+        if self.app.busy or self.loading:
+            self.hint.set('Finish the current voice task before changing models.')
+            return
+        window = tk.Toplevel(self.app.root)
+        window.title('ChatShift · Voice AI models')
+        window.configure(background='#1b1e2e')
+        window.transient(self.app.root)
+        body = ttk.Frame(window, padding=20, style='Models.TFrame')
+        body.pack(fill='both', expand=True)
+        choice = tk.StringVar(value=self.model_choice.get())
+        ttk.Label(body, text='Voice speech recognition', font=('Segoe UI', 14, 'bold')).pack(anchor='w')
+        ttk.Label(body, text='Only the speech engine changes. Text translation stays unchanged.').pack(anchor='w', pady=8)
+        for heading, keys in (('Local models', ('small', 'medium', 'turbo')),
+                              ('Online models', ('realtime', 'gpt_transcribe'))):
+            section = ttk.LabelFrame(body, text=heading, padding=12, style='Models.TLabelframe')
+            section.pack(fill='x', pady=8)
+            for key in keys:
+                label, description = MODELS[key]
+                ttk.Radiobutton(section, text=label, variable=choice, value=key).pack(anchor='w', pady=(6, 0))
+                ttk.Label(section, text=description, wraplength=510).pack(anchor='w', padx=22)
+        ttk.Label(body, text='Local models download on first recording (hundreds of MB to several GB).\nSelecting a local model accepts that download. Local recognition stays on your PC;\nLuna translation still uses your ChatGPT connection.', wraplength=550).pack(anchor='w', pady=16)
+        def apply():
+            if self.app.busy or self.loading:
+                self.hint.set('Finish the current task before changing models.')
+                return
+            trial = getattr(self.app, 'voice_trial', None)
+            if trial is not None and not trial.closed:
+                trial.close()
+            self.abort('Speech model changed.')
+            self.model_choice.set(choice.get())
+            self.model_label.set(MODELS[choice.get()][0])
+            self.model = get_model(self.app)
+            self.app.preferences_changed()
+            self.configure()
+            self.hint.set('Selected: ' + self.model_label.get())
+            window.destroy()
+        ttk.Button(body, text='Activate selected model', style='Accent.TButton', command=apply).pack(anchor='e')
 
     def refresh_microphones(self):
         if self.recording or self.processing or self.app.busy:
@@ -210,13 +257,14 @@ class VoiceInput:
         if self.model is not None or self.loading:
             return
         self.loading = True
-        self.hint.set('Connecting cloud voice through your ChatGPT sign-in…')
+        self.hint.set('Preparing selected speech engine…')
+        from speech_models import get_model
+        selected_model = get_model(self.app)
         def work():
             try:
-                from realtime_adapter import RealtimeTranscriber
                 from microphones import list_microphones
                 devices = list_microphones()
-                model = getattr(self.app, 'speech_model', None) or RealtimeTranscriber()
+                model = selected_model
                 self.events.put(('ready', (model, devices)))
             except ImportError:
                 self.events.put(('load_error', 'Voice setup is incomplete. Run Install ChatShift.cmd, then restart ChatShift.'))
@@ -269,7 +317,7 @@ class VoiceInput:
             return
         self.processing = True
         self.app.badge.set('TRANSCRIBING')
-        self.app.status.set('Finishing live speech… stay in the same chat field.')
+        self.app.status.set('Recognizing speech… stay in the same chat field.')
         cancel = self.cancel
         def work():
             started = time.perf_counter()
@@ -329,6 +377,10 @@ class VoiceInput:
     def poll(self):
         if hasattr(self, 'monitor'):
             self.monitor.poll()
+        stage = getattr(self.model, 'status', '')
+        if self.processing and not self.cancel.is_set() and stage:
+            self.app.status.set(stage)
+            self.hint.set(stage)
         if self.recording or self.processing:
             try:
                 changed = win.focus_snapshot() != self.target or win.last_input() != self.revision

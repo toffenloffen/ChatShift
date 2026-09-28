@@ -1,4 +1,4 @@
-# Cloud voice build components
+# Voice build components
 
 This build includes Python/Tcl/Tk, Pillow, NumPy, sounddevice/PortAudio and their
 runtime dependencies. Actual distribution licenses and metadata are included under
@@ -11,5 +11,8 @@ library may be replaced with a compatible modified version under its LGPL terms.
 
 aiortc, PyAV and their WebRTC/FFmpeg dependencies are bundled for streaming audio.
 Available package licenses and metadata are included under licenses.
-Whisper and CTranslate2 are not bundled. No speech recognition models
-download during setup. Old model caches are not deleted.
+faster-whisper, CTranslate2, tokenizers and huggingface_hub are included for optional
+local speech recognition. Their installed licenses and metadata are included.
+Whisper model files are not bundled: the selected local model downloads from
+Hugging Face on first use. No speech recognition model downloads during setup.
+Old model caches are not deleted.

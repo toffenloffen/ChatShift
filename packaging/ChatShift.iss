@@ -7,7 +7,7 @@
 [Setup]
 AppId={#AppIdValue}
 AppName=ChatShift
-AppVersion=0.4.0
+AppVersion=0.5.0
 AppPublisher=toffenloffen
 DefaultDirName={localappdata}\Programs\ChatShift
 DefaultGroupName={#GroupNameValue}
@@ -30,9 +30,10 @@ DisableProgramGroupPage=yes
 Source: "..\dist\ChatShift\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{userprograms}\{#GroupNameValue}\ChatShift"; Filename: "{app}\ChatShift.exe"
-Name: "{userprograms}\{#GroupNameValue}\ChatShift Setup"; Filename: "{app}\ChatShift.exe"; Parameters: "--setup"
 Name: "{userprograms}\{#GroupNameValue}\Uninstall ChatShift"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\ChatShift"; Filename: "{app}\ChatShift.exe"
+Name: "{autodesktop}\{#GroupNameValue}"; Filename: "{app}\ChatShift.exe"; Parameters: "--settings"; Comment: "Open the installed ChatShift"
+[InstallDelete]
+Type: files; Name: "{userprograms}\{#GroupNameValue}\ChatShift Setup.lnk"
 [Run]
 Filename: "{app}\ChatShift.exe"; Flags: nowait skipifsilent
 [Code]

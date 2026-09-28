@@ -4,7 +4,7 @@ import threading
 import time
 import tkinter as tk
 from tkinter import ttk
-from realtime_adapter import RealtimeTranscriber
+from speech_models import get_model, MODELS
 from realtime_adapter import LiveRecorder
 
 
@@ -15,7 +15,7 @@ class VoiceTrial:
         self.recording = False
         self.model = None
         self.recorder = LiveRecorder(app.voice.source_language.get(), {}, threading.Event())
-        self.model = getattr(app, 'speech_model', None) or RealtimeTranscriber()
+        self.model = get_model(app)
         app.speech_model = self.model
         self.model.warm(app.voice.source_language.get(), app.voice.noise_options())
         self.events = queue.Queue()
@@ -23,12 +23,18 @@ class VoiceTrial:
         self.owns_busy = False
         self.raw_audio = self.filtered_audio = None
         self.window = tk.Toplevel(app.root)
-        self.window.title('ChatShift · Cloud voice test')
+        self.window.title('ChatShift · Voice test')
         self.window.geometry('690x800')
         self.window.configure(bg='#10111b')
         body = ttk.Frame(self.window, padding=20)
         body.pack(fill='both', expand=True)
         ttk.Label(body, text='Try your microphone', font=('Segoe UI', 18, 'bold')).pack(anchor='w')
+        ttk.Label(body, text=MODELS[app.voice.model_choice.get()][0]).pack(anchor='w')
+        self.account_status = tk.StringVar(value=(
+            'GPT-Transcribe account: checked when you submit a recording.'
+            if app.voice.model_choice.get() == 'gpt_transcribe' else ''))
+        if app.voice.model_choice.get() == 'gpt_transcribe':
+            ttk.Label(body, textvariable=self.account_status, wraplength=640).pack(anchor='w')
         ttk.Label(body, text='Record a short sentence, then check what the AI heard.\nThis test does not send anything to your game.').pack(anchor='w', pady=8)
         self.status = tk.StringVar(value='Ready. Start recording, speak, then Stop recording to see both texts.')
         ttk.Label(body, textvariable=self.status, wraplength=640).pack(anchor='w', pady=8)
@@ -67,7 +73,7 @@ class VoiceTrial:
         ttk.Label(body, text='Luna translation · review only').pack(anchor='w')
         self.output = tk.Text(body, height=4, wrap='word', bg='#1b1e2e', fg='#f2f3ff', insertbackground='white')
         self.output.pack(fill='x', pady=5)
-        ttk.Label(body, text='Noise suppression runs locally. Audio is sent to OpenAI while you record.\nRecording stops automatically after 30 seconds. Playback stays in memory until the next recording or closing this window.', wraplength=640).pack(anchor='w', pady=8)
+        ttk.Label(body, text=MODELS[app.voice.model_choice.get()][1] + '\nNoise suppression runs locally before recognition. Stop recording when you finish speaking.\nPlayback stays in memory until the next recording or closing this window.', wraplength=640).pack(anchor='w', pady=8)
         self.window.protocol('WM_DELETE_WINDOW', self.close)
         self.timer = self.window.after(50, self.poll)
 
@@ -101,7 +107,7 @@ class VoiceTrial:
             except ValueError as exc:
                 self.finish(str(exc))
                 return
-            self.status.set('Finishing live speech…')
+            self.status.set('Recognizing speech… Local model files may download on first use.')
             threading.Thread(target=self.process, args=(audio,), daemon=True).start()
             return
         monitor = getattr(self.app.voice, 'monitor', None)
@@ -137,6 +143,8 @@ class VoiceTrial:
         self.button.configure(text='Stop recording')
         self.original.delete('1.0', 'end')
         self.output.delete('1.0', 'end')
+        if self.app.voice.model_choice.get() == 'gpt_transcribe':
+            self.account_status.set('GPT-Transcribe account: checked when you submit this recording.')
         self.status.set(f'Listening · {self.source} → {self.target}. Click Stop recording when finished.')
 
     def wait_for_monitor(self):
@@ -173,6 +181,9 @@ class VoiceTrial:
             if not self.cancel.is_set():
                 self.events.put(('error', str(exc) if isinstance(exc, ValueError) else 'Voice processing failed. Try another short recording.'))
         finally:
+            account_status = getattr(self.model, 'account_status', '')
+            if isinstance(account_status, str) and account_status:
+                self.events.put(('account', account_status))
             self.events.put(('released', None))
 
     def finish(self, message):
@@ -190,6 +201,9 @@ class VoiceTrial:
     def poll(self):
         if self.closed:
             return
+        stage = getattr(self.model, 'status', '')
+        if self.owns_busy and not self.recording and not self.cancel.is_set() and stage:
+            self.status.set(stage)
         readings = []
         while not self.recorder.levels.empty():
             readings.append(self.recorder.levels.get())
@@ -218,6 +232,8 @@ class VoiceTrial:
                         except OSError:pass
                 elif kind == 'timing':
                     self.last_timing = value
+                elif kind == 'account':
+                    self.account_status.set(value)
                 elif kind == 'released':
                     if not self.closed and not self.app.closing:
                         self.model.warm(self.app.voice.source_language.get(), self.app.voice.noise_options())
